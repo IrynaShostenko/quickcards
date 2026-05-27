@@ -18,3 +18,20 @@ export const cardImportText = {
   customCardPlaceholder: "Example: ###",
   importButton: "Import to preview",
 };
+
+export const cardsPreviewText = {
+  title: "Preview and edit",
+  description:
+    "These are the final cards that will be saved when you click Save.",
+  addCardButton: "Add card",
+  saveButton: "Save",
+  savingButton: "Saving...",
+  shareButton: "Share",
+  practicePreviewButton: "Practice preview",
+  columns: {
+    front: "Expression",
+    back: "Meaning",
+    example: "Example",
+    note: "Note",
+  },
+};
