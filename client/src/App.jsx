@@ -4,7 +4,7 @@ import { supabase } from "./supabaseClient";
 
 import { sampleDeck, sampleInput } from "./utils/sampleData";
 import { insertTextAtCursor, parseCards } from "./utils/cardParser";
-
+import { insertCardLater, shuffleCards } from "./utils/cardPractice";
 
 function getPracticeDeckIdFromUrl() {
   const hashPath = window.location.hash.replace("#", "");
@@ -102,22 +102,6 @@ function Flashcard({ card }) {
       </button>
     </div>
   );
-}
-
-function shuffleCards(cards) {
-  return [...cards].sort(() => Math.random() - 0.5);
-}
-
-function insertCardLater(queue, card, currentIndex) {
-  if (!queue.length) return [card];
-
-  const minOffset = 2;
-  const maxOffset = Math.min(4, queue.length + 1);
-  const offset =
-    Math.floor(Math.random() * (maxOffset - minOffset + 1)) + minOffset;
-  const insertIndex = Math.min(currentIndex + offset, queue.length);
-
-  return [...queue.slice(0, insertIndex), card, ...queue.slice(insertIndex)];
 }
 
 function StudentDeck({
