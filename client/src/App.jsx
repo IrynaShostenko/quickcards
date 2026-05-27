@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "./supabaseClient";
 import { getPublicDeck } from "./api/publicApi";
+import { saveDeckWithCards } from "./api/decksApi";
 
 import { sampleDeck, sampleInput } from "./utils/sampleData";
 import { parseCards } from "./utils/cardParser";
@@ -122,66 +122,45 @@ export default function App() {
   };
 
   const saveDeck = async () => {
-    const cleanCards = previewCards.filter(
-      (card) => card.front.trim() && card.back.trim(),
-    );
+    const cleanCards = previewCards
+      .map((card) => ({
+        ...card,
+        front: card.front.trim(),
+        back: card.back.trim(),
+        example: card.example.trim(),
+        note: card.note.trim(),
+      }))
+      .filter((card) => card.front && card.back);
 
     if (!cleanCards.length) {
-      setSaveMessage(
-        "Add at least one card with Expression and Meaning before saving.",
-      );
-      return;
+      setSaveMessage("Add at least one card with expression and meaning.");
+      return null;
     }
 
     setIsSaving(true);
     setSaveMessage("");
 
     try {
-      const { data: deckData, error: deckError } = await supabase
-        .from("decks")
-        .insert({
-          title: title || "Untitled set",
-          description,
-          is_public: true,
-        })
-        .select("id, title, description, created_at")
-        .single();
-
-      if (deckError) throw deckError;
-
-      const cardsToInsert = cleanCards.map((card, index) => ({
-        deck_id: deckData.id,
-        front: card.front,
-        back: card.back,
-        example: card.example || null,
-        note: card.note || null,
-        order_index: index,
-      }));
-
-      const { error: cardsError } = await supabase
-        .from("cards")
-        .insert(cardsToInsert);
-
-      if (cardsError) throw cardsError;
-
-      const savedDeckFromSupabase = {
-        id: deckData.id,
-        title: deckData.title,
-        description: deckData.description,
+      const savedDeckFromApi = await saveDeckWithCards({
+        existingDeckId: savedDeck?.id,
+        title,
+        description,
         cards: cleanCards,
-        createdAt: deckData.created_at,
-      };
+      });
 
-      setSavedDeck(savedDeckFromSupabase);
+      setSavedDeck(savedDeckFromApi);
       setPreviewCards(cleanCards);
       setIsShareReady(true);
       setIsSharePanelOpen(false);
       setSaveMessage(
         `Set saved with ${cleanCards.length} cards. Share is now available.`,
       );
+
+      return savedDeckFromApi;
     } catch (error) {
       console.error(error);
       setSaveMessage(`Could not save the set: ${error.message}`);
+      return null;
     } finally {
       setIsSaving(false);
     }
