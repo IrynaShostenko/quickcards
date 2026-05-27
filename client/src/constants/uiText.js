@@ -56,3 +56,35 @@ export const flashcardText = {
   showAnswerAriaLabel: "Show answer",
   hideAnswerAriaLabel: "Hide answer",
 };
+
+export const studentDeckText = {
+  emptyState: "No cards yet.",
+  backToEditorButton: "Back to editor",
+  pageLabel: "QuickCards practice",
+  untitledSet: "Untitled set",
+  sessionCompleteTitle: "Session complete",
+  stats: {
+    totalCards: "Total cards:",
+    reviewed: "Reviewed:",
+    known: "Known:",
+    repeat: "Repeat:",
+    hard: "Hard:",
+  },
+  actions: {
+    repeatAll: "Repeat all",
+    repeatHard: "Repeat hard",
+    randomOrder: "Practice random order",
+    know: "Know",
+    repeat: "Repeat",
+    hard: "Hard",
+    previous: "Previous",
+    next: "Next",
+  },
+  progress: {
+    cards: "cards",
+    reviewed: "reviewed",
+    left: "left",
+    hard: "hard",
+  },
+  lastRepeatNotice: "Last repeat: choose Know or Hard",
+};

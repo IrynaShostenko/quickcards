@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Flashcard from "../../components/cards/Flashcard";
+import { studentDeckText } from "../../constants/uiText";
 import { insertCardLater, shuffleCards } from "../../utils/cardPractice";
 
 export default function StudentDeck({
@@ -128,13 +129,14 @@ export default function StudentDeck({
   if (!cards.length) {
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <p className="text-slate-600">No cards yet.</p>
+        <p className="text-slate-600">{studentDeckText.emptyState}</p>
+
         {showBackButton && (
           <button
             onClick={onBackToEditor}
             className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-white"
           >
-            Back to editor
+            {studentDeckText.backToEditorButton}
           </button>
         )}
       </div>
@@ -147,35 +149,50 @@ export default function StudentDeck({
         <div className="mx-auto max-w-5xl">
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">QuickCards practice</p>
+              <p className="text-sm text-slate-500">
+                {studentDeckText.pageLabel}
+              </p>
+
               <h1 className="text-3xl font-bold text-slate-950">
-                {title || "Untitled set"}
+                {title || studentDeckText.untitledSet}
               </h1>
+
               {description && (
                 <p className="mt-2 max-w-2xl text-slate-500">{description}</p>
               )}
             </div>
+
             {showBackButton && (
               <button
                 onClick={onBackToEditor}
                 className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
-                Back to editor
+                {studentDeckText.backToEditorButton}
               </button>
             )}
           </div>
 
           <section className="mx-auto max-w-[620px] rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm md:p-12">
             <h2 className="text-3xl font-bold text-slate-950">
-              Session complete
+              {studentDeckText.sessionCompleteTitle}
             </h2>
 
             <div className="mx-auto mt-8 grid max-w-sm gap-3 text-lg text-slate-600">
-              <p>Total cards: {totalCards}</p>
-              <p>Reviewed: {reviewedCount}</p>
-              <p>Known: {knownCount}</p>
-              <p>Repeat: {repeatCount}</p>
-              <p>Hard: {hardCount}</p>
+              <p>
+                {studentDeckText.stats.totalCards} {totalCards}
+              </p>
+              <p>
+                {studentDeckText.stats.reviewed} {reviewedCount}
+              </p>
+              <p>
+                {studentDeckText.stats.known} {knownCount}
+              </p>
+              <p>
+                {studentDeckText.stats.repeat} {repeatCount}
+              </p>
+              <p>
+                {studentDeckText.stats.hard} {hardCount}
+              </p>
             </div>
 
             <div className="mt-10 grid gap-3">
@@ -183,20 +200,22 @@ export default function StudentDeck({
                 onClick={() => resetSession(cards)}
                 className="rounded-3xl bg-indigo-600 px-6 py-4 text-lg font-bold text-white hover:bg-indigo-500"
               >
-                Repeat all
+                {studentDeckText.actions.repeatAll}
               </button>
+
               <button
                 onClick={repeatHardCards}
                 disabled={!hardCount}
                 className="rounded-3xl bg-rose-100 px-6 py-4 text-lg font-bold text-rose-700 hover:bg-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               >
-                Repeat hard
+                {studentDeckText.actions.repeatHard}
               </button>
+
               <button
                 onClick={() => resetSession(shuffleCards(cards))}
                 className="rounded-3xl bg-slate-100 px-6 py-4 text-lg font-bold text-slate-700 hover:bg-slate-200"
               >
-                Practice random order
+                {studentDeckText.actions.randomOrder}
               </button>
             </div>
           </section>
@@ -210,32 +229,40 @@ export default function StudentDeck({
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-slate-500">QuickCards practice</p>
+            <p className="text-sm text-slate-500">
+              {studentDeckText.pageLabel}
+            </p>
+
             <h1 className="text-3xl font-bold text-slate-950">
-              {title || "Untitled set"}
+              {title || studentDeckText.untitledSet}
             </h1>
+
             {description && (
               <p className="mt-2 max-w-2xl text-slate-500">{description}</p>
             )}
           </div>
+
           {showBackButton && (
             <button
               onClick={onBackToEditor}
               className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
             >
-              Back to editor
+              {studentDeckText.backToEditorButton}
             </button>
           )}
         </div>
 
         <div className="mx-auto mb-5 flex max-w-[920px] flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
           <span>
-            {totalCards} cards · {reviewedCount} reviewed · {leftCount} left ·{" "}
-            {hardCount} hard
+            {totalCards} {studentDeckText.progress.cards} · {reviewedCount}{" "}
+            {studentDeckText.progress.reviewed} · {leftCount}{" "}
+            {studentDeckText.progress.left} · {hardCount}{" "}
+            {studentDeckText.progress.hard}
           </span>
+
           {lastRepeatCard && (
             <span className="rounded-full bg-amber-50 px-4 py-2 font-semibold text-amber-700">
-              Last repeat: choose Know or Hard
+              {studentDeckText.lastRepeatNotice}
             </span>
           )}
         </div>
@@ -250,21 +277,23 @@ export default function StudentDeck({
             onClick={handleKnow}
             className="rounded-3xl bg-emerald-50 px-6 py-5 text-lg font-bold text-emerald-700 hover:bg-emerald-100"
           >
-            Know
+            {studentDeckText.actions.know}
           </button>
+
           {!lastRepeatCard && (
             <button
               onClick={handleRepeat}
               className="rounded-3xl bg-amber-50 px-6 py-5 text-lg font-bold text-amber-700 hover:bg-amber-100"
             >
-              Repeat
+              {studentDeckText.actions.repeat}
             </button>
           )}
+
           <button
             onClick={handleHard}
             className="rounded-3xl bg-rose-50 px-6 py-5 text-lg font-bold text-rose-700 hover:bg-rose-100"
           >
-            Hard
+            {studentDeckText.actions.hard}
           </button>
         </div>
 
@@ -274,8 +303,9 @@ export default function StudentDeck({
             disabled={Boolean(lastRepeatCard) || currentIndex === 0}
             className="rounded-2xl border border-slate-200 bg-white px-6 py-4 font-semibold text-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Previous
+            {studentDeckText.actions.previous}
           </button>
+
           <button
             onClick={() =>
               setCurrentIndex((index) => Math.min(index + 1, queue.length - 1))
@@ -285,7 +315,7 @@ export default function StudentDeck({
             }
             className="rounded-2xl border border-slate-200 bg-white px-8 py-4 font-semibold text-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            {studentDeckText.actions.next}
           </button>
         </div>
       </div>
