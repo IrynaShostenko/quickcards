@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabaseClient";
 
-
 import { sampleDeck, sampleInput } from "./utils/sampleData";
 import { parseCards } from "./utils/cardParser";
 import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
@@ -10,7 +9,7 @@ import StudentDeck from "./features/practice/StudentDeck";
 import CardsPreviewTable from "./components/cards/CardsPreviewTable";
 import CardImportBox from "./components/cards/CardImportBox";
 import DeckEditorHeader from "./features/decks/DeckEditorHeader";
-
+import SharePanel from "./features/decks/SharePanel";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -27,6 +26,7 @@ export default function App() {
   const [isLoadingStudentDeck, setIsLoadingStudentDeck] =
     useState(isStudentOnlyView);
   const [saveMessage, setSaveMessage] = useState("");
+  const [copied, setCopied] = useState(false);
   const [isShareReady, setIsShareReady] = useState(false);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -238,16 +238,31 @@ export default function App() {
     );
   };
 
-  const getStudentLink = () => {
-    if (!savedDeck) return "";
-    return `${window.location.origin}${window.location.pathname}#/practice/${savedDeck.id}`;
+  const shareUrl = savedDeck
+    ? `${window.location.origin}${window.location.pathname}#/practice/${savedDeck.id}`
+    : "";
+
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      setSaveMessage("Could not copy the student link.");
+    }
   };
 
-  const shareDeck = () => {
+  const shareDeck = async () => {
     if (!savedDeck) return;
+
     setIsSharePanelOpen(true);
-    const studentLink = getStudentLink();
-    navigator.clipboard?.writeText(studentLink);
+    await copyShareLink();
+
     setSaveMessage(
       "Student link copied. Anyone with this link can practice this set.",
     );
@@ -347,43 +362,15 @@ export default function App() {
         />
 
         {isShareReady && isSharePanelOpen && savedDeck && (
-          <section className="mb-8 rounded-[2rem] bg-white p-6 shadow-sm">
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold">Share with students</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Anyone with this link can practice this set. Editing is not
-                  available from the student link.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={shareDeck}
-                  className="rounded-3xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-500"
-                >
-                  Copy link
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsSharePanelOpen(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-xl font-bold text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-                  aria-label="Close share panel"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-            <div className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <input
-                readOnly
-                value={getStudentLink()}
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-600 outline-none"
-              />
-              <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
-                Practice only
-              </span>
-            </div>
-          </section>
+          <SharePanel
+            shareUrl={shareUrl}
+            copied={copied}
+            onCopy={copyShareLink}
+            onOpen={() => {
+              window.location.hash = `/practice/${savedDeck.id}`;
+              window.dispatchEvent(new HashChangeEvent("hashchange"));
+            }}
+          />
         )}
 
         <CardsPreviewTable

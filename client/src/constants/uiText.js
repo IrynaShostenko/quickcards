@@ -104,3 +104,11 @@ export const deckEditorHeaderText = {
     descriptionPlaceholder: "Add a description...",
   },
 };
+
+export const sharePanelText = {
+  title: "Share with students",
+  description: "Copy this link and send it to your students.",
+  openButton: "Open student view",
+  copyButton: "Copy link",
+  copiedMessage: "Link copied",
+};
