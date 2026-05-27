@@ -10,6 +10,7 @@ import CardsPreviewTable from "./components/cards/CardsPreviewTable";
 import CardImportBox from "./components/cards/CardImportBox";
 import DeckEditorHeader from "./features/decks/DeckEditorHeader";
 import SharePanel from "./features/decks/SharePanel";
+import StatusMessage from "./components/common/StatusMessage";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -340,9 +341,9 @@ export default function App() {
         />
 
         {saveMessage && (
-          <div className="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 text-sm font-semibold text-indigo-700">
+          <StatusMessage onClose={() => setSaveMessage("")}>
             {saveMessage}
-          </div>
+          </StatusMessage>
         )}
 
         <CardImportBox
