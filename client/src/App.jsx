@@ -7,6 +7,8 @@ import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
 
 import StudentDeck from "./features/practice/StudentDeck";
 import DeckEditorPage from "./features/decks/DeckEditorPage";
+import PracticeLoadingPage from "./features/practice/PracticeLoadingPage";
+import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -273,34 +275,12 @@ export default function App() {
     ? studentDeck?.description
     : description;
 
-  if (isStudentOnlyView && isLoadingStudentDeck) {
-    return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-        <div className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 shadow-sm">
-          <p className="text-slate-500">Loading practice set...</p>
-        </div>
-      </main>
-    );
-  }
+if (isStudentOnlyView && isLoadingStudentDeck) {
+  return <PracticeLoadingPage />;
+}
 
   if (isStudentOnlyView && !studentDeck) {
-    return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-        <div className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-950">
-            Practice set not found
-          </h1>
-          <p className="mt-2 text-slate-500">
-            This link may be incorrect, private, or the set could not be loaded.
-          </p>
-          {saveMessage && (
-            <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-              {saveMessage}
-            </p>
-          )}
-        </div>
-      </main>
-    );
+    return <PracticeNotFoundPage message={saveMessage} />;
   }
 
   if (mode === "student") {
