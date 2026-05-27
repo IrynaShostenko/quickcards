@@ -9,6 +9,8 @@ import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
 import StudentDeck from "./features/practice/StudentDeck";
 import CardsPreviewTable from "./components/cards/CardsPreviewTable";
 import CardImportBox from "./components/cards/CardImportBox";
+import DeckEditorHeader from "./features/decks/DeckEditorHeader";
+
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -304,72 +306,29 @@ export default function App() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-start">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Create a card module
-            </h1>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Public
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={startNewDeck}
-              className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
-            >
-              New
-            </button>
-            <button
-              onClick={saveDeck}
-              disabled={isSaving}
-              className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={createDeck}
-              className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
-            >
-              Create
-            </button>
-            <button
-              onClick={createAndPractice}
-              className="rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
-            >
-              Create and practice
-            </button>
-          </div>
-        </header>
+        <DeckEditorHeader
+          title={title}
+          description={description}
+          isSaving={isSaving}
+          onTitleChange={(value) => {
+            setTitle(value);
+            markDraftChanged();
+          }}
+          onDescriptionChange={(value) => {
+            setDescription(value);
+            markDraftChanged();
+          }}
+          onStartNewDeck={startNewDeck}
+          onSave={saveDeck}
+          onCreate={createDeck}
+          onCreateAndPractice={createAndPractice}
+        />
 
         {saveMessage && (
           <div className="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 text-sm font-semibold text-indigo-700">
             {saveMessage}
           </div>
         )}
-
-        <section className="mb-8 space-y-3">
-          <input
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value);
-              markDraftChanged();
-            }}
-            className="w-full rounded-2xl border border-transparent bg-white px-6 py-5 text-xl font-bold shadow-sm outline-none transition focus:border-indigo-300"
-            placeholder="Title"
-          />
-          <input
-            value={description}
-            onChange={(event) => {
-              setDescription(event.target.value);
-              markDraftChanged();
-            }}
-            className="w-full rounded-2xl border border-transparent bg-white px-6 py-5 text-lg text-slate-600 shadow-sm outline-none transition focus:border-indigo-300"
-            placeholder="Add a description..."
-          />
-        </section>
 
         <CardImportBox
           rawCards={rawCards}

@@ -88,3 +88,19 @@ export const studentDeckText = {
   },
   lastRepeatNotice: "Last repeat: choose Know or Hard",
 };
+
+export const deckEditorHeaderText = {
+  title: "Create a card module",
+  visibilityLabel: "Public",
+  buttons: {
+    new: "New",
+    save: "Save",
+    saving: "Saving...",
+    create: "Create",
+    createAndPractice: "Create and practice",
+  },
+  fields: {
+    titlePlaceholder: "Title",
+    descriptionPlaceholder: "Add a description...",
+  },
+};
