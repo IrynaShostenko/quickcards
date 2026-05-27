@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { getPublicDeck } from "./api/publicApi";
+
 import { saveDeckWithCards } from "./api/decksApi";
+import { getPublicDeck } from "./api/publicApi";
 
-import { sampleDeck, sampleInput } from "./utils/sampleData";
-import { parseCards } from "./utils/cardParser";
-import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
-import { cleanCardsForSave, createEmptyCard } from "./utils/deckUtils";
+import { editorMessages } from "./constants/uiText";
 
-import StudentDeck from "./features/practice/StudentDeck";
 import DeckEditorPage from "./features/decks/DeckEditorPage";
 import PracticeLoadingPage from "./features/practice/PracticeLoadingPage";
 import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
+import StudentDeck from "./features/practice/StudentDeck";
+
+import { parseCards } from "./utils/cardParser";
+import { cleanCardsForSave, createEmptyCard } from "./utils/deckUtils";
+import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
+import { sampleDeck, sampleInput } from "./utils/sampleData";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -31,12 +34,14 @@ export default function App() {
   const [isShareReady, setIsShareReady] = useState(false);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   const [settings, setSettings] = useState({
     termDelimiter: "tab",
     cardDelimiter: "newline",
     customTermDelimiter: "—",
     customCardDelimiter: "###",
   });
+
   const [previewCards, setPreviewCards] = useState(() =>
     isStudentOnlyView
       ? []
@@ -59,7 +64,7 @@ export default function App() {
         setStudentDeck(publicDeck);
       } catch (error) {
         console.error(error);
-        setSaveMessage(`Could not load this practice set: ${error.message}`);
+        setSaveMessage(editorMessages.loadPracticeError(error.message));
       } finally {
         setIsLoadingStudentDeck(false);
       }
@@ -87,13 +92,12 @@ export default function App() {
     setPreviewCards(parsedCards);
     setRawCards("");
     markDraftChanged();
-    setSaveMessage(
-      `${parsedCards.length} cards imported to preview. The import field was cleared.`,
-    );
+    setSaveMessage(editorMessages.importSuccess(parsedCards.length));
   };
 
   const updatePreviewCard = (cardId, field, value) => {
     markDraftChanged();
+
     setPreviewCards((currentCards) =>
       currentCards.map((card) =>
         card.id === cardId ? { ...card, [field]: value } : card,
@@ -103,6 +107,7 @@ export default function App() {
 
   const deletePreviewCard = (cardId) => {
     markDraftChanged();
+
     setPreviewCards((currentCards) =>
       currentCards.filter((card) => card.id !== cardId),
     );
@@ -110,6 +115,7 @@ export default function App() {
 
   const addPreviewCard = () => {
     markDraftChanged();
+
     setPreviewCards((currentCards) => [createEmptyCard(), ...currentCards]);
   };
 
@@ -117,7 +123,7 @@ export default function App() {
     const cleanCards = cleanCardsForSave(previewCards);
 
     if (!cleanCards.length) {
-      setSaveMessage("Add at least one card with expression and meaning.");
+      setSaveMessage(editorMessages.addAtLeastOneCard);
       return null;
     }
 
@@ -136,14 +142,12 @@ export default function App() {
       setPreviewCards(cleanCards);
       setIsShareReady(true);
       setIsSharePanelOpen(false);
-      setSaveMessage(
-        `Set saved with ${cleanCards.length} cards. Share is now available.`,
-      );
+      setSaveMessage(editorMessages.saveSuccess(cleanCards.length));
 
       return savedDeckFromApi;
     } catch (error) {
       console.error(error);
-      setSaveMessage(`Could not save the set: ${error.message}`);
+      setSaveMessage(editorMessages.saveError(error.message));
       return null;
     } finally {
       setIsSaving(false);
@@ -158,19 +162,15 @@ export default function App() {
     setSavedDeck(null);
     setIsShareReady(false);
     setIsSharePanelOpen(false);
-    setSaveMessage("New card module started.");
+    setSaveMessage(editorMessages.newCardModuleStarted);
   };
 
   const createDeck = () => {
-    setSaveMessage(
-      "Create will save the set and return to the teacher dashboard. This step will be connected later.",
-    );
+    setSaveMessage(editorMessages.createDeckLater);
   };
 
   const createAndPractice = () => {
-    setSaveMessage(
-      "Create and practice will save the set, return to the dashboard, and open the student link in a new window. This step will be connected later.",
-    );
+    setSaveMessage(editorMessages.createAndPracticeLater);
   };
 
   const shareUrl = savedDeck
@@ -188,7 +188,7 @@ export default function App() {
         setCopied(false);
       }, 1500);
     } catch {
-      setSaveMessage("Could not copy the student link.");
+      setSaveMessage(editorMessages.couldNotCopyStudentLink);
     }
   };
 
@@ -198,15 +198,15 @@ export default function App() {
     setIsSharePanelOpen(true);
     await copyShareLink();
 
-    setSaveMessage(
-      "Student link copied. Anyone with this link can practice this set.",
-    );
+    setSaveMessage(editorMessages.studentLinkCopied);
   };
 
   const practiceCards = isStudentOnlyView
     ? studentDeck?.cards || []
     : previewCards;
+
   const practiceTitle = isStudentOnlyView ? studentDeck?.title : title;
+
   const practiceDescription = isStudentOnlyView
     ? studentDeck?.description
     : description;

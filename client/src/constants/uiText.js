@@ -112,3 +112,22 @@ export const sharePanelText = {
   copyButton: "Copy link",
   copiedMessage: "Link copied",
 };
+
+export const editorMessages = {
+  addAtLeastOneCard: "Add at least one card with expression and meaning.",
+  newCardModuleStarted: "New card module started.",
+  createDeckLater:
+    "Create will save the set and return to the teacher dashboard. This step will be connected later.",
+  createAndPracticeLater:
+    "Create and practice will save the set, return to the dashboard, and open the student link in a new window. This step will be connected later.",
+  couldNotCopyStudentLink: "Could not copy the student link.",
+  studentLinkCopied:
+    "Student link copied. Anyone with this link can practice this set.",
+  saveSuccess: (cardsCount) =>
+    `Set saved with ${cardsCount} cards. Share is now available.`,
+  saveError: (message) => `Could not save the set: ${message}`,
+  loadPracticeError: (message) =>
+    `Could not load this practice set: ${message}`,
+  importSuccess: (cardsCount) =>
+    `${cardsCount} cards imported to preview. The import field was cleared.`,
+};
