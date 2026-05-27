@@ -6,11 +6,7 @@ import { parseCards } from "./utils/cardParser";
 import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
 
 import StudentDeck from "./features/practice/StudentDeck";
-import CardsPreviewTable from "./components/cards/CardsPreviewTable";
-import CardImportBox from "./components/cards/CardImportBox";
-import DeckEditorHeader from "./features/decks/DeckEditorHeader";
-import SharePanel from "./features/decks/SharePanel";
-import StatusMessage from "./components/common/StatusMessage";
+import DeckEditorPage from "./features/decks/DeckEditorPage";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
@@ -320,72 +316,53 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-      <div className="mx-auto max-w-6xl">
-        <DeckEditorHeader
-          title={title}
-          description={description}
-          isSaving={isSaving}
-          onTitleChange={(value) => {
-            setTitle(value);
-            markDraftChanged();
-          }}
-          onDescriptionChange={(value) => {
-            setDescription(value);
-            markDraftChanged();
-          }}
-          onStartNewDeck={startNewDeck}
-          onSave={saveDeck}
-          onCreate={createDeck}
-          onCreateAndPractice={createAndPractice}
-        />
-
-        {saveMessage && (
-          <StatusMessage onClose={() => setSaveMessage("")}>
-            {saveMessage}
-          </StatusMessage>
-        )}
-
-        <CardImportBox
-          rawCards={rawCards}
-          parsedCardsCount={parsedCards.length}
-          settings={settings}
-          onRawCardsChange={(value) => {
-            setRawCards(value);
-            markDraftChanged();
-          }}
-          onClear={() => {
-            setRawCards("");
-            markDraftChanged();
-          }}
-          onSettingChange={updateSetting}
-          onImport={importToPreview}
-        />
-
-        {isShareReady && isSharePanelOpen && savedDeck && (
-          <SharePanel
-            shareUrl={shareUrl}
-            copied={copied}
-            onCopy={copyShareLink}
-            onOpen={() => {
-              window.location.hash = `/practice/${savedDeck.id}`;
-              window.dispatchEvent(new HashChangeEvent("hashchange"));
-            }}
-          />
-        )}
-
-        <CardsPreviewTable
-          previewCards={previewCards}
-          isSaving={isSaving}
-          isShareReady={isShareReady}
-          onAddCard={addPreviewCard}
-          onSave={saveDeck}
-          onShare={shareDeck}
-          onPractice={() => setMode("student")}
-          onUpdateCard={updatePreviewCard}
-          onDeleteCard={deletePreviewCard}
-        />
-      </div>
-    </main>
+    <DeckEditorPage
+      title={title}
+      description={description}
+      rawCards={rawCards}
+      parsedCards={parsedCards}
+      previewCards={previewCards}
+      settings={settings}
+      saveMessage={saveMessage}
+      isSaving={isSaving}
+      isShareReady={isShareReady}
+      isSharePanelOpen={isSharePanelOpen}
+      savedDeck={savedDeck}
+      shareUrl={shareUrl}
+      copied={copied}
+      onTitleChange={(value) => {
+        setTitle(value);
+        markDraftChanged();
+      }}
+      onDescriptionChange={(value) => {
+        setDescription(value);
+        markDraftChanged();
+      }}
+      onStartNewDeck={startNewDeck}
+      onSave={saveDeck}
+      onCreate={createDeck}
+      onCreateAndPractice={createAndPractice}
+      onCloseMessage={() => setSaveMessage("")}
+      onRawCardsChange={(value) => {
+        setRawCards(value);
+        markDraftChanged();
+      }}
+      onClearRawCards={() => {
+        setRawCards("");
+        markDraftChanged();
+      }}
+      onSettingChange={updateSetting}
+      onImportToPreview={importToPreview}
+      onCopyShareLink={copyShareLink}
+      onOpenStudentView={() => {
+        window.location.hash = `/practice/${savedDeck.id}`;
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      }}
+      onAddCard={addPreviewCard}
+      onShare={shareDeck}
+      onPracticePreview={() => setMode("student")}
+      onUpdateCard={updatePreviewCard}
+      onDeleteCard={deletePreviewCard}
+    />
   );
 }
