@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { flashcardText } from "../../constants/uiText";
 
 export default function Flashcard({ card }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -10,18 +11,24 @@ export default function Flashcard({ card }) {
         onClick={() => setIsFlipped((value) => !value)}
         className="relative block min-h-[520px] w-full rounded-[2rem] outline-none [transform-style:preserve-3d] transition-transform duration-500 ease-out"
         style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
-        aria-label={isFlipped ? "Hide answer" : "Show answer"}
+        aria-label={
+          isFlipped
+            ? flashcardText.hideAnswerAriaLabel
+            : flashcardText.showAnswerAriaLabel
+        }
       >
         <div className="absolute inset-0 flex rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm [backface-visibility:hidden] md:p-12">
           <div className="m-auto flex max-w-3xl flex-col items-center text-center">
             <p className="mb-6 text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
-              Front
+              {flashcardText.frontLabel}
             </p>
+
             <h2 className="text-3xl font-semibold leading-tight text-slate-950 md:text-5xl">
               {card.front}
             </h2>
+
             <p className="mt-10 rounded-full bg-slate-100 px-5 py-2 text-sm text-slate-500">
-              Click to show answer
+              {flashcardText.showAnswerHint}
             </p>
           </div>
         </div>
@@ -31,8 +38,9 @@ export default function Flashcard({ card }) {
             <div className="space-y-6">
               <div>
                 <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
-                  Back
+                  {flashcardText.backLabel}
                 </p>
+
                 <h2 className="text-3xl font-semibold leading-tight text-slate-950 md:text-4xl">
                   {card.back}
                 </h2>
@@ -41,7 +49,7 @@ export default function Flashcard({ card }) {
               {card.example && (
                 <div className="rounded-3xl bg-slate-50 p-5 md:p-6">
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Example
+                    {flashcardText.exampleLabel}
                   </p>
                   <p className="text-lg leading-relaxed text-slate-700 md:text-xl">
                     {card.example}
@@ -52,7 +60,7 @@ export default function Flashcard({ card }) {
               {card.note && (
                 <div className="rounded-3xl bg-amber-50 p-5 md:p-6">
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">
-                    Note
+                    {flashcardText.noteLabel}
                   </p>
                   <p className="text-lg leading-relaxed text-slate-700">
                     {card.note}
@@ -62,7 +70,7 @@ export default function Flashcard({ card }) {
             </div>
 
             <p className="mx-auto mt-auto rounded-full bg-slate-100 px-5 py-2 text-center text-sm text-slate-500">
-              Click anywhere on the card to hide answer
+              {flashcardText.hideAnswerHint}
             </p>
           </div>
         </div>

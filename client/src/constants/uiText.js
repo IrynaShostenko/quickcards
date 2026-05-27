@@ -45,3 +45,14 @@ export const cardEditorRowText = {
   },
   deleteAriaLabel: "Delete card",
 };
+
+export const flashcardText = {
+  frontLabel: "Front",
+  backLabel: "Back",
+  exampleLabel: "Example",
+  noteLabel: "Note",
+  showAnswerHint: "Click to show answer",
+  hideAnswerHint: "Click anywhere on the card to hide answer",
+  showAnswerAriaLabel: "Show answer",
+  hideAnswerAriaLabel: "Hide answer",
+};
