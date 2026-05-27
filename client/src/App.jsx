@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabaseClient";
+import { getPublicDeck } from "./api/publicApi";
 
 import { sampleDeck, sampleInput } from "./utils/sampleData";
 import { parseCards } from "./utils/cardParser";
@@ -53,36 +54,8 @@ export default function App() {
       setIsLoadingStudentDeck(true);
 
       try {
-        const { data: deckData, error: deckError } = await supabase
-          .from("decks")
-          .select("id, title, description, created_at")
-          .eq("id", practiceDeckId)
-          .eq("is_public", true)
-          .single();
-
-        if (deckError) throw deckError;
-
-        const { data: cardsData, error: cardsError } = await supabase
-          .from("cards")
-          .select("id, front, back, example, note, order_index")
-          .eq("deck_id", practiceDeckId)
-          .order("order_index", { ascending: true });
-
-        if (cardsError) throw cardsError;
-
-        setStudentDeck({
-          id: deckData.id,
-          title: deckData.title,
-          description: deckData.description,
-          createdAt: deckData.created_at,
-          cards: (cardsData || []).map((card) => ({
-            id: card.id,
-            front: card.front,
-            back: card.back,
-            example: card.example || "",
-            note: card.note || "",
-          })),
-        });
+        const publicDeck = await getPublicDeck(practiceDeckId);
+        setStudentDeck(publicDeck);
       } catch (error) {
         console.error(error);
         setSaveMessage(`Could not load this practice set: ${error.message}`);
@@ -275,9 +248,9 @@ export default function App() {
     ? studentDeck?.description
     : description;
 
-if (isStudentOnlyView && isLoadingStudentDeck) {
-  return <PracticeLoadingPage />;
-}
+  if (isStudentOnlyView && isLoadingStudentDeck) {
+    return <PracticeLoadingPage />;
+  }
 
   if (isStudentOnlyView && !studentDeck) {
     return <PracticeNotFoundPage message={saveMessage} />;
