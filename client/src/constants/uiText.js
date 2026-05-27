@@ -35,3 +35,13 @@ export const cardsPreviewText = {
     note: "Note",
   },
 };
+
+export const cardEditorRowText = {
+  placeholders: {
+    front: "Expression",
+    back: "Meaning",
+    example: "Example",
+    note: "Note",
+  },
+  deleteAriaLabel: "Delete card",
+};
