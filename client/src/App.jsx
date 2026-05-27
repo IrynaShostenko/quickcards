@@ -5,33 +5,9 @@ import { supabase } from "./supabaseClient";
 import { sampleDeck, sampleInput } from "./utils/sampleData";
 import { insertTextAtCursor, parseCards } from "./utils/cardParser";
 import { insertCardLater, shuffleCards } from "./utils/cardPractice";
+import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
+import OptionButton from "./components/common/OptionButton";
 
-function getPracticeDeckIdFromUrl() {
-  const hashPath = window.location.hash.replace("#", "");
-  const pathParts = hashPath.split("/").filter(Boolean);
-
-  if (pathParts[0] !== "practice" || !pathParts[1]) {
-    return null;
-  }
-
-  return pathParts[1];
-}
-
-function OptionButton({ active, children, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-        active
-          ? "bg-indigo-600 text-white shadow-sm"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function Flashcard({ card }) {
   const [isFlipped, setIsFlipped] = useState(false);
