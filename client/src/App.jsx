@@ -128,7 +128,11 @@ export default function App() {
       copied={editor.copied}
       onTitleChange={editor.updateTitle}
       onDescriptionChange={editor.updateDescription}
-      onStartNewDeck={editor.startNewDeck}
+      onStartNewDeck={() => {
+        editor.startNewDeck();
+        setCurrentEditDeckId(null);
+        window.history.replaceState(null, "", window.location.pathname);
+      }}
       onSave={async () => {
         const savedDeck = await editor.saveDeck();
 
