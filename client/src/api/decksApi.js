@@ -1,23 +1,50 @@
 import { apiRequest } from "./httpClient";
 
+function mapDeckFromApi(deck) {
+  return {
+    id: deck.id,
+    title: deck.title,
+    description: deck.description,
+    public_slug: deck.public_slug,
+    is_public: deck.is_public,
+    created_at: deck.created_at,
+    updated_at: deck.updated_at,
+    cards: (deck.cards || []).map((card) => ({
+      id: card.id,
+      front: card.front,
+      back: card.back,
+      example: card.example || "",
+      note: card.note || "",
+      order_index: card.order_index,
+    })),
+  };
+}
+
 export async function saveDeckWithCards({
   existingDeckId,
   title,
   description,
   cards,
 }) {
+  const payload = {
+    title,
+    description,
+    cards,
+  };
+
   if (existingDeckId) {
-    throw new Error("Deck update is not connected yet.");
+    const data = await apiRequest(`/decks/${existingDeckId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+
+    return mapDeckFromApi(data.deck);
   }
 
   const data = await apiRequest("/decks", {
     method: "POST",
-    body: JSON.stringify({
-      title,
-      description,
-      cards,
-    }),
+    body: JSON.stringify(payload),
   });
 
-  return data.deck;
+  return mapDeckFromApi(data.deck);
 }

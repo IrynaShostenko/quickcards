@@ -1,7 +1,24 @@
 const {
+  getDeckById,
   createDeckWithCards,
   updateDeckWithCards,
 } = require("../services/decksService");
+
+async function getDeck(req, res) {
+  try {
+    const { id } = req.params;
+
+    const deck = await getDeckById(id);
+
+    return res.json({ deck });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Could not load deck.",
+    });
+  }
+}
 
 async function createDeck(req, res) {
   try {
@@ -58,6 +75,7 @@ async function updateDeck(req, res) {
 }
 
 module.exports = {
+  getDeck,
   createDeck,
   updateDeck,
 };

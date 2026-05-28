@@ -12,6 +12,40 @@ function cleanDeckCards(cards = []) {
     .filter((card) => card.front && card.back);
 }
 
+async function getDeckById(deckId) {
+  const deckResult = await pool.query(
+    `
+    SELECT id, title, description, public_slug, is_public, created_at, updated_at
+    FROM decks
+    WHERE id = $1
+    `,
+    [deckId],
+  );
+
+  const deck = deckResult.rows[0];
+
+  if (!deck) {
+    const error = new Error("Deck not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const cardsResult = await pool.query(
+    `
+    SELECT id, front, back, example, note, order_index
+    FROM cards
+    WHERE deck_id = $1
+    ORDER BY order_index ASC
+    `,
+    [deckId],
+  );
+
+  return {
+    ...deck,
+    cards: cardsResult.rows,
+  };
+}
+
 async function createDeckWithCards({ title, description = "", cards = [] }) {
   const cleanCards = cleanDeckCards(cards);
 
@@ -143,6 +177,7 @@ async function updateDeckWithCards({
 }
 
 module.exports = {
+  getDeckById,
   createDeckWithCards,
   updateDeckWithCards,
 };

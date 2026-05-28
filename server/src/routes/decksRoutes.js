@@ -1,8 +1,13 @@
 const express = require("express");
-const { createDeck, updateDeck } = require("../controllers/decksController");
+const {
+  getDeck,
+  createDeck,
+  updateDeck,
+} = require("../controllers/decksController");
 
 const router = express.Router();
 
+router.get("/:id", getDeck);
 router.post("/", createDeck);
 router.put("/:id", updateDeck);
 
