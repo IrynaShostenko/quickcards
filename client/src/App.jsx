@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { saveDeckWithCards } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
-
 import { editorMessages } from "./constants/uiText";
 
 import DeckEditorPage from "./features/decks/DeckEditorPage";
@@ -10,48 +8,20 @@ import PracticeLoadingPage from "./features/practice/PracticeLoadingPage";
 import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 import StudentDeck from "./features/practice/StudentDeck";
 
-import { parseCards } from "./utils/cardParser";
-import { cleanCardsForSave, createEmptyCard } from "./utils/deckUtils";
+import { useDeckEditor } from "./hooks/useDeckEditor";
 import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
-import { sampleDeck, sampleInput } from "./utils/sampleData";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
   const isStudentOnlyView = Boolean(practiceDeckId);
 
-  const [title, setTitle] = useState(sampleDeck.title);
-  const [description, setDescription] = useState(sampleDeck.description);
-  const [rawCards, setRawCards] = useState(
-    isStudentOnlyView ? "" : sampleInput,
-  );
   const [mode, setMode] = useState(isStudentOnlyView ? "student" : "editor");
-  const [savedDeck, setSavedDeck] = useState(null);
   const [studentDeck, setStudentDeck] = useState(null);
   const [isLoadingStudentDeck, setIsLoadingStudentDeck] =
     useState(isStudentOnlyView);
-  const [saveMessage, setSaveMessage] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [isShareReady, setIsShareReady] = useState(false);
-  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const [settings, setSettings] = useState({
-    termDelimiter: "tab",
-    cardDelimiter: "newline",
-    customTermDelimiter: "—",
-    customCardDelimiter: "###",
-  });
-
-  const [previewCards, setPreviewCards] = useState(() =>
-    isStudentOnlyView
-      ? []
-      : parseCards(sampleInput, {
-          termDelimiter: "tab",
-          cardDelimiter: "newline",
-          customTermDelimiter: "—",
-          customCardDelimiter: "###",
-        }),
-  );
+  const editor = useDeckEditor({ isStudentOnlyView });
+  const { setSaveMessage } = editor;
 
   useEffect(() => {
     if (!practiceDeckId) return;
@@ -71,152 +41,24 @@ export default function App() {
     };
 
     loadStudentDeck();
-  }, [practiceDeckId]);
-
-  const parsedCards = useMemo(
-    () => parseCards(rawCards, settings),
-    [rawCards, settings],
-  );
-
-  const markDraftChanged = () => {
-    setIsShareReady(false);
-    setIsSharePanelOpen(false);
-    setSavedDeck(null);
-  };
-
-  const updateSetting = (key, value) => {
-    setSettings((current) => ({ ...current, [key]: value }));
-  };
-
-  const importToPreview = () => {
-    setPreviewCards(parsedCards);
-    setRawCards("");
-    markDraftChanged();
-    setSaveMessage(editorMessages.importSuccess(parsedCards.length));
-  };
-
-  const updatePreviewCard = (cardId, field, value) => {
-    markDraftChanged();
-
-    setPreviewCards((currentCards) =>
-      currentCards.map((card) =>
-        card.id === cardId ? { ...card, [field]: value } : card,
-      ),
-    );
-  };
-
-  const deletePreviewCard = (cardId) => {
-    markDraftChanged();
-
-    setPreviewCards((currentCards) =>
-      currentCards.filter((card) => card.id !== cardId),
-    );
-  };
-
-  const addPreviewCard = () => {
-    markDraftChanged();
-
-    setPreviewCards((currentCards) => [createEmptyCard(), ...currentCards]);
-  };
-
-  const saveDeck = async () => {
-    const cleanCards = cleanCardsForSave(previewCards);
-
-    if (!cleanCards.length) {
-      setSaveMessage(editorMessages.addAtLeastOneCard);
-      return null;
-    }
-
-    setIsSaving(true);
-    setSaveMessage("");
-
-    try {
-      const savedDeckFromApi = await saveDeckWithCards({
-        existingDeckId: savedDeck?.id,
-        title,
-        description,
-        cards: cleanCards,
-      });
-
-      setSavedDeck(savedDeckFromApi);
-      setPreviewCards(cleanCards);
-      setIsShareReady(true);
-      setIsSharePanelOpen(false);
-      setSaveMessage(editorMessages.saveSuccess(cleanCards.length));
-
-      return savedDeckFromApi;
-    } catch (error) {
-      console.error(error);
-      setSaveMessage(editorMessages.saveError(error.message));
-      return null;
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const startNewDeck = () => {
-    setTitle("Untitled set");
-    setDescription("");
-    setRawCards("");
-    setPreviewCards([]);
-    setSavedDeck(null);
-    setIsShareReady(false);
-    setIsSharePanelOpen(false);
-    setSaveMessage(editorMessages.newCardModuleStarted);
-  };
-
-  const createDeck = () => {
-    setSaveMessage(editorMessages.createDeckLater);
-  };
-
-  const createAndPractice = () => {
-    setSaveMessage(editorMessages.createAndPracticeLater);
-  };
-
-  const shareUrl = savedDeck
-    ? `${window.location.origin}${window.location.pathname}#/practice/${savedDeck.id}`
-    : "";
-
-  const copyShareLink = async () => {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-
-      setTimeout(() => {
-        setCopied(false);
-      }, 1500);
-    } catch {
-      setSaveMessage(editorMessages.couldNotCopyStudentLink);
-    }
-  };
-
-  const shareDeck = async () => {
-    if (!savedDeck) return;
-
-    setIsSharePanelOpen(true);
-    await copyShareLink();
-
-    setSaveMessage(editorMessages.studentLinkCopied);
-  };
+  }, [practiceDeckId, setSaveMessage]);
 
   const practiceCards = isStudentOnlyView
     ? studentDeck?.cards || []
-    : previewCards;
+    : editor.previewCards;
 
-  const practiceTitle = isStudentOnlyView ? studentDeck?.title : title;
+  const practiceTitle = isStudentOnlyView ? studentDeck?.title : editor.title;
 
   const practiceDescription = isStudentOnlyView
     ? studentDeck?.description
-    : description;
+    : editor.description;
 
   if (isStudentOnlyView && isLoadingStudentDeck) {
     return <PracticeLoadingPage />;
   }
 
   if (isStudentOnlyView && !studentDeck) {
-    return <PracticeNotFoundPage message={saveMessage} />;
+    return <PracticeNotFoundPage message={editor.saveMessage} />;
   }
 
   if (mode === "student") {
@@ -233,52 +75,40 @@ export default function App() {
 
   return (
     <DeckEditorPage
-      title={title}
-      description={description}
-      rawCards={rawCards}
-      parsedCards={parsedCards}
-      previewCards={previewCards}
-      settings={settings}
-      saveMessage={saveMessage}
-      isSaving={isSaving}
-      isShareReady={isShareReady}
-      isSharePanelOpen={isSharePanelOpen}
-      savedDeck={savedDeck}
-      shareUrl={shareUrl}
-      copied={copied}
-      onTitleChange={(value) => {
-        setTitle(value);
-        markDraftChanged();
-      }}
-      onDescriptionChange={(value) => {
-        setDescription(value);
-        markDraftChanged();
-      }}
-      onStartNewDeck={startNewDeck}
-      onSave={saveDeck}
-      onCreate={createDeck}
-      onCreateAndPractice={createAndPractice}
-      onCloseMessage={() => setSaveMessage("")}
-      onRawCardsChange={(value) => {
-        setRawCards(value);
-        markDraftChanged();
-      }}
-      onClearRawCards={() => {
-        setRawCards("");
-        markDraftChanged();
-      }}
-      onSettingChange={updateSetting}
-      onImportToPreview={importToPreview}
-      onCopyShareLink={copyShareLink}
+      title={editor.title}
+      description={editor.description}
+      rawCards={editor.rawCards}
+      parsedCards={editor.parsedCards}
+      previewCards={editor.previewCards}
+      settings={editor.settings}
+      saveMessage={editor.saveMessage}
+      isSaving={editor.isSaving}
+      isShareReady={editor.isShareReady}
+      isSharePanelOpen={editor.isSharePanelOpen}
+      savedDeck={editor.savedDeck}
+      shareUrl={editor.shareUrl}
+      copied={editor.copied}
+      onTitleChange={editor.updateTitle}
+      onDescriptionChange={editor.updateDescription}
+      onStartNewDeck={editor.startNewDeck}
+      onSave={editor.saveDeck}
+      onCreate={editor.createDeck}
+      onCreateAndPractice={editor.createAndPractice}
+      onCloseMessage={editor.closeMessage}
+      onRawCardsChange={editor.updateRawCards}
+      onClearRawCards={editor.clearRawCards}
+      onSettingChange={editor.updateSetting}
+      onImportToPreview={editor.importToPreview}
+      onCopyShareLink={editor.copyShareLink}
       onOpenStudentView={() => {
-        window.location.hash = `/practice/${savedDeck.id}`;
+        window.location.hash = `/practice/${editor.savedDeck.id}`;
         window.dispatchEvent(new HashChangeEvent("hashchange"));
       }}
-      onAddCard={addPreviewCard}
-      onShare={shareDeck}
+      onAddCard={editor.addPreviewCard}
+      onShare={editor.shareDeck}
       onPracticePreview={() => setMode("student")}
-      onUpdateCard={updatePreviewCard}
-      onDeleteCard={deletePreviewCard}
+      onUpdateCard={editor.updatePreviewCard}
+      onDeleteCard={editor.deletePreviewCard}
     />
   );
 }
