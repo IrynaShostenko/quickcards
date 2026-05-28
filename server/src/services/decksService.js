@@ -1,4 +1,5 @@
 const pool = require("../db/pool");
+const { createPublicSlug } = require("../utils/slugify");
 
 function cleanDeckCards(cards = []) {
   return cards
@@ -24,16 +25,16 @@ async function createDeckWithCards({ title, description = "", cards = [] }) {
 
   try {
     await client.query("BEGIN");
+    const publicSlug = createPublicSlug(title);
 
     const deckResult = await client.query(
       `
-      INSERT INTO decks (teacher_id, title, description, is_public)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, title, description, is_public, created_at, updated_at
-      `,
-      [null, title.trim(), description.trim(), true],
+  INSERT INTO decks (teacher_id, title, description, public_slug, is_public)
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING id, title, description, public_slug, is_public, created_at, updated_at
+  `,
+      [null, title.trim(), description.trim(), publicSlug, true],
     );
-
     const deck = deckResult.rows[0];
 
     const cardResults = [];
