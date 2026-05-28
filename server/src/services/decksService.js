@@ -12,7 +12,7 @@ function cleanDeckCards(cards = []) {
     .filter((card) => card.front && card.back);
 }
 
-async function getDecksList() {
+async function getDecksList(teacherId) {
   const result = await pool.query(
     `
     SELECT
@@ -26,22 +26,24 @@ async function getDecksList() {
       COUNT(cards.id)::INTEGER AS cards_count
     FROM decks
     LEFT JOIN cards ON cards.deck_id = decks.id
+    WHERE decks.teacher_id = $1
     GROUP BY decks.id
     ORDER BY decks.updated_at DESC
     `,
+    [teacherId],
   );
 
   return result.rows;
 }
 
-async function getDeckById(deckId) {
+async function getDeckById({ deckId, teacherId }) {
   const deckResult = await pool.query(
     `
     SELECT id, title, description, public_slug, is_public, created_at, updated_at
     FROM decks
-    WHERE id = $1
+    WHERE id = $1 AND teacher_id = $2
     `,
-    [deckId],
+    [deckId, teacherId],
   );
 
   const deck = deckResult.rows[0];
@@ -68,7 +70,12 @@ async function getDeckById(deckId) {
   };
 }
 
-async function createDeckWithCards({ title, description = "", cards = [] }) {
+async function createDeckWithCards({
+  teacherId,
+  title,
+  description = "",
+  cards = [],
+}) {
   const cleanCards = cleanDeckCards(cards);
 
   if (!cleanCards.length) {
@@ -89,7 +96,7 @@ async function createDeckWithCards({ title, description = "", cards = [] }) {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, title, description, public_slug, is_public, created_at, updated_at
       `,
-      [null, title.trim(), description.trim(), publicSlug, true],
+      [teacherId, title.trim(), description.trim(), publicSlug, true],
     );
 
     const deck = deckResult.rows[0];
@@ -124,6 +131,7 @@ async function createDeckWithCards({ title, description = "", cards = [] }) {
 
 async function updateDeckWithCards({
   deckId,
+  teacherId,
   title,
   description = "",
   cards = [],
@@ -147,10 +155,10 @@ async function updateDeckWithCards({
       SET title = $1,
           description = $2,
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      WHERE id = $3 AND teacher_id = $4
       RETURNING id, title, description, public_slug, is_public, created_at, updated_at
       `,
-      [title.trim(), description.trim(), deckId],
+      [title.trim(), description.trim(), deckId, teacherId],
     );
 
     const deck = deckResult.rows[0];
@@ -198,14 +206,14 @@ async function updateDeckWithCards({
   }
 }
 
-async function deleteDeckById(deckId) {
+async function deleteDeckById({ deckId, teacherId }) {
   const result = await pool.query(
     `
     DELETE FROM decks
-    WHERE id = $1
+    WHERE id = $1 AND teacher_id = $2
     RETURNING id
     `,
-    [deckId],
+    [deckId, teacherId],
   );
 
   if (!result.rows[0]) {

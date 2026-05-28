@@ -1,4 +1,5 @@
 const express = require("express");
+
 const {
   getDecks,
   getDeck,
@@ -6,8 +7,11 @@ const {
   updateDeck,
   deleteDeck,
 } = require("../controllers/decksController");
+const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
+
+router.use(requireAuth);
 
 router.get("/", getDecks);
 router.get("/:id", getDeck);

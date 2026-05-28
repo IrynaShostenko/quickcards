@@ -8,7 +8,7 @@ const {
 
 async function getDecks(req, res) {
   try {
-    const decks = await getDecksList();
+    const decks = await getDecksList(req.user.id);
 
     return res.json({ decks });
   } catch (error) {
@@ -24,7 +24,10 @@ async function getDeck(req, res) {
   try {
     const { id } = req.params;
 
-    const deck = await getDeckById(id);
+    const deck = await getDeckById({
+      deckId: id,
+      teacherId: req.user.id,
+    });
 
     return res.json({ deck });
   } catch (error) {
@@ -47,6 +50,7 @@ async function createDeck(req, res) {
     }
 
     const deck = await createDeckWithCards({
+      teacherId: req.user.id,
       title,
       description,
       cards,
@@ -75,6 +79,7 @@ async function updateDeck(req, res) {
 
     const deck = await updateDeckWithCards({
       deckId: id,
+      teacherId: req.user.id,
       title,
       description,
       cards,
@@ -92,7 +97,10 @@ async function updateDeck(req, res) {
 
 async function deleteDeck(req, res) {
   try {
-    const deletedDeck = await deleteDeckById(req.params.id);
+    const deletedDeck = await deleteDeckById({
+      deckId: req.params.id,
+      teacherId: req.user.id,
+    });
 
     return res.json({
       message: "Deck deleted successfully.",
