@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { saveDeckWithCards } from "../api/decksApi";
 import { editorMessages } from "../constants/uiText";
@@ -25,6 +25,8 @@ export function useDeckEditor({ isStudentOnlyView }) {
   const [isShareReady, setIsShareReady] = useState(false);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutosaving, setIsAutosaving] = useState(false);
+  const [autosaveMessage, setAutosaveMessage] = useState("");
   const [settings, setSettings] = useState(defaultSettings);
   const [previewCards, setPreviewCards] = useState(() =>
     isStudentOnlyView ? [] : parseCards(sampleInput, defaultSettings),
@@ -38,6 +40,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
 
   const markDraftChanged = () => {
     setHasUnsavedChanges(true);
+    setAutosaveMessage("");
     setIsShareReady(false);
     setIsSharePanelOpen(false);
   };
@@ -96,18 +99,16 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setPreviewCards((currentCards) => [createEmptyCard(), ...currentCards]);
   };
 
-  const saveDeck = async () => {
-    const cleanCards = cleanCardsForSave(previewCards);
+  const saveCurrentDeck = useCallback(
+    async ({ showMessage = true } = {}) => {
+      const cleanCards = cleanCardsForSave(previewCards);
 
-    if (!cleanCards.length) {
-      setSaveMessage(editorMessages.addAtLeastOneCard);
-      return null;
-    }
+      if (!cleanCards.length) {
+        const error = new Error(editorMessages.addAtLeastOneCard);
+        error.statusCode = 400;
+        throw error;
+      }
 
-    setIsSaving(true);
-    setSaveMessage("");
-
-    try {
       const savedDeckFromApi = await saveDeckWithCards({
         existingDeckId: savedDeck?.id,
         title,
@@ -120,8 +121,23 @@ export function useDeckEditor({ isStudentOnlyView }) {
       setHasUnsavedChanges(false);
       setIsShareReady(true);
       setIsSharePanelOpen(false);
-      setSaveMessage(editorMessages.saveSuccess(cleanCards.length));
 
+      if (showMessage) {
+        setSaveMessage(editorMessages.saveSuccess(cleanCards.length));
+      }
+
+      return savedDeckFromApi;
+    },
+    [description, previewCards, savedDeck?.id, title],
+  );
+
+  const saveDeck = async () => {
+    setIsSaving(true);
+    setAutosaveMessage("");
+    setSaveMessage("");
+
+    try {
+      const savedDeckFromApi = await saveCurrentDeck({ showMessage: true });
       return savedDeckFromApi;
     } catch (error) {
       console.error(error);
@@ -132,6 +148,29 @@ export function useDeckEditor({ isStudentOnlyView }) {
     }
   };
 
+  useEffect(() => {
+    if (!savedDeck?.id) return;
+    if (!hasUnsavedChanges) return;
+    if (isSaving) return;
+
+    const autosaveTimer = window.setTimeout(async () => {
+      setIsAutosaving(true);
+      setAutosaveMessage("Autosaving...");
+
+      try {
+        await saveCurrentDeck({ showMessage: false });
+        setAutosaveMessage("Autosaved");
+      } catch (error) {
+        console.error(error);
+        setAutosaveMessage("Autosave failed");
+      } finally {
+        setIsAutosaving(false);
+      }
+    }, 1500);
+
+    return () => window.clearTimeout(autosaveTimer);
+  }, [hasUnsavedChanges, isSaving, saveCurrentDeck, savedDeck?.id]);
+
   const startNewDeck = () => {
     setTitle("Untitled set");
     setDescription("");
@@ -139,6 +178,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setPreviewCards([]);
     setSavedDeck(null);
     setHasUnsavedChanges(true);
+    setAutosaveMessage("");
     setIsShareReady(false);
     setIsSharePanelOpen(false);
     setSaveMessage(editorMessages.newCardModuleStarted);
@@ -188,17 +228,18 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setIsSharePanelOpen(false);
   };
 
-  const loadDeckIntoEditor = (deck) => {
+  const loadDeckIntoEditor = useCallback((deck) => {
     setTitle(deck.title || "");
     setDescription(deck.description || "");
     setRawCards("");
     setPreviewCards(deck.cards || []);
     setSavedDeck(deck);
     setHasUnsavedChanges(false);
+    setAutosaveMessage("");
     setIsShareReady(Boolean(deck.public_slug));
     setIsSharePanelOpen(false);
     setSaveMessage("");
-  };
+  }, []);
 
   return {
     title,
@@ -213,6 +254,8 @@ export function useDeckEditor({ isStudentOnlyView }) {
     isShareReady,
     isSharePanelOpen,
     isSaving,
+    isAutosaving,
+    autosaveMessage,
     shareUrl,
     hasUnsavedChanges,
 

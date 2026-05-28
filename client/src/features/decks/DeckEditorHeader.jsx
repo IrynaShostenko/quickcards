@@ -4,6 +4,8 @@ export default function DeckEditorHeader({
   title,
   description,
   isSaving,
+  isAutosaving,
+  autosaveMessage,
   hasUnsavedChanges,
   onTitleChange,
   onDescriptionChange,
@@ -32,7 +34,10 @@ export default function DeckEditorHeader({
                   hasUnsavedChanges ? "bg-amber-400" : "bg-emerald-500"
                 }`}
               />
-              {hasUnsavedChanges ? "Unsaved changes" : "Saved"}
+              {isAutosaving
+                ? "Autosaving..."
+                : autosaveMessage ||
+                  (hasUnsavedChanges ? "Unsaved changes" : "Saved")}
             </div>
           </div>
         </div>

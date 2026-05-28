@@ -121,6 +121,8 @@ export default function App() {
       settings={editor.settings}
       saveMessage={editor.saveMessage}
       isSaving={editor.isSaving}
+      isAutosaving={editor.isAutosaving}
+      autosaveMessage={editor.autosaveMessage}
       hasUnsavedChanges={editor.hasUnsavedChanges}
       isShareReady={editor.isShareReady}
       isSharePanelOpen={editor.isSharePanelOpen}

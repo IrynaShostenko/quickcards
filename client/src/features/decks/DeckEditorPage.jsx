@@ -14,6 +14,8 @@ export default function DeckEditorPage({
   saveMessage,
   isSaving,
   isShareReady,
+  isAutosaving,
+  autosaveMessage,
   isSharePanelOpen,
   savedDeck,
   shareUrl,
@@ -46,6 +48,8 @@ export default function DeckEditorPage({
           title={title}
           description={description}
           isSaving={isSaving}
+          isAutosaving={isAutosaving}
+          autosaveMessage={autosaveMessage}
           hasUnsavedChanges={hasUnsavedChanges}
           onTitleChange={onTitleChange}
           onDescriptionChange={onDescriptionChange}
