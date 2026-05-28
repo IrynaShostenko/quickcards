@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { getDeckById, getDecksList } from "./api/decksApi";
+import { deleteDeck, getDeckById, getDecksList } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
 import { editorMessages } from "./constants/uiText";
 
+import DashboardPage from "./features/dashboard/DashboardPage";
 import DeckEditorPage from "./features/decks/DeckEditorPage";
 import PracticeLoadingPage from "./features/practice/PracticeLoadingPage";
 import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 import StudentDeck from "./features/practice/StudentDeck";
-import DashboardPage from "./features/dashboard/DashboardPage";
 
 import { useDeckEditor } from "./hooks/useDeckEditor";
 import {
@@ -18,32 +18,63 @@ import {
 } from "./utils/routeUtils";
 
 export default function App() {
-  const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
-  const initialEditDeckId = useMemo(() => getEditDeckIdFromUrl(), []);
-  const isDashboardView = useMemo(() => isDashboardRoute(), []);
-  const [currentEditDeckId, setCurrentEditDeckId] = useState(initialEditDeckId);
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
+
+  const practiceDeckId = useMemo(
+    () => getPracticeDeckIdFromUrl(),
+    [currentHash],
+  );
+
+  const editDeckId = useMemo(() => getEditDeckIdFromUrl(), [currentHash]);
+
+  const isDashboardView = useMemo(() => isDashboardRoute(), [currentHash]);
+
   const isStudentOnlyView = Boolean(practiceDeckId);
 
   const [mode, setMode] = useState(isStudentOnlyView ? "student" : "editor");
+
   const [studentDeck, setStudentDeck] = useState(null);
   const [isLoadingStudentDeck, setIsLoadingStudentDeck] =
     useState(isStudentOnlyView);
+
   const [isLoadingEditDeck, setIsLoadingEditDeck] = useState(
-    Boolean(initialEditDeckId),
+    Boolean(editDeckId),
   );
+
   const [dashboardDecks, setDashboardDecks] = useState([]);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(isDashboardView);
   const [dashboardErrorMessage, setDashboardErrorMessage] = useState("");
+  const [copiedDeckId, setCopiedDeckId] = useState(null);
 
   const editor = useDeckEditor({ isStudentOnlyView });
   const { loadDeckIntoEditor, setSaveMessage } = editor;
-  const loadedEditDeckIdRef = useRef(null);
 
   useEffect(() => {
-    if (!practiceDeckId) return;
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    setMode(isStudentOnlyView ? "student" : "editor");
+  }, [isStudentOnlyView]);
+
+  useEffect(() => {
+    if (!practiceDeckId) {
+      setStudentDeck(null);
+      setIsLoadingStudentDeck(false);
+      return;
+    }
 
     const loadStudentDeck = async () => {
       setIsLoadingStudentDeck(true);
+      setStudentDeck(null);
 
       try {
         const publicDeck = await getPublicDeck(practiceDeckId);
@@ -60,17 +91,16 @@ export default function App() {
   }, [practiceDeckId, setSaveMessage]);
 
   useEffect(() => {
-    if (!initialEditDeckId) return;
-
-    if (loadedEditDeckIdRef.current === initialEditDeckId) return;
-
-    loadedEditDeckIdRef.current = initialEditDeckId;
+    if (!editDeckId) {
+      setIsLoadingEditDeck(false);
+      return;
+    }
 
     const loadEditDeck = async () => {
       setIsLoadingEditDeck(true);
 
       try {
-        const deck = await getDeckById(initialEditDeckId);
+        const deck = await getDeckById(editDeckId);
         loadDeckIntoEditor(deck);
       } catch (error) {
         console.error(error);
@@ -81,7 +111,7 @@ export default function App() {
     };
 
     loadEditDeck();
-  }, [initialEditDeckId, loadDeckIntoEditor, setSaveMessage]);
+  }, [editDeckId, loadDeckIntoEditor, setSaveMessage]);
 
   useEffect(() => {
     if (!isDashboardView) return;
@@ -120,18 +150,46 @@ export default function App() {
         decks={dashboardDecks}
         isLoading={isLoadingDashboard}
         errorMessage={dashboardErrorMessage}
+        copiedDeckId={copiedDeckId}
         onCreateNew={() => {
-          window.location.href = `${window.location.pathname}`;
+          window.location.hash = "";
+          setCurrentHash("");
         }}
         onEditDeck={(deckId) => {
-          window.location.href = `${window.location.pathname}#/edit/${deckId}`;
+          window.location.hash = `/edit/${deckId}`;
         }}
-        onOpenPractice={(publicSlug) => {
-          window.open(
-            `${window.location.origin}${window.location.pathname}#/practice/${publicSlug}`,
-            "_blank",
-            "noopener,noreferrer",
+        onCopyPracticeLink={async (deck) => {
+          const practiceUrl = `${window.location.origin}${window.location.pathname}#/practice/${deck.public_slug}`;
+
+          try {
+            await navigator.clipboard.writeText(practiceUrl);
+            setCopiedDeckId(deck.id);
+
+            window.setTimeout(() => {
+              setCopiedDeckId(null);
+            }, 1500);
+          } catch (error) {
+            console.error(error);
+            setDashboardErrorMessage("Could not copy student link.");
+          }
+        }}
+        onDeleteDeck={async (deckId) => {
+          const shouldDelete = window.confirm(
+            "Delete this deck? This action cannot be undone.",
           );
+
+          if (!shouldDelete) return;
+
+          try {
+            await deleteDeck(deckId);
+
+            setDashboardDecks((currentDecks) =>
+              currentDecks.filter((deck) => deck.id !== deckId),
+            );
+          } catch (error) {
+            console.error(error);
+            setDashboardErrorMessage(error.message || "Could not delete deck.");
+          }
         }}
       />
     );
@@ -191,18 +249,18 @@ export default function App() {
         }
 
         editor.startNewDeck();
-        setCurrentEditDeckId(null);
         window.history.replaceState(null, "", window.location.pathname);
+        setCurrentHash("");
       }}
       onOpenDashboard={() => {
-        window.location.href = `${window.location.pathname}#/dashboard`;
+        window.location.hash = "/dashboard";
       }}
       onSave={async () => {
         const savedDeck = await editor.saveDeck();
 
-        if (savedDeck?.id && !currentEditDeckId) {
+        if (savedDeck?.id && !editDeckId) {
           window.history.replaceState(null, "", `#/edit/${savedDeck.id}`);
-          setCurrentEditDeckId(savedDeck.id);
+          setCurrentHash(`#/edit/${savedDeck.id}`);
         }
 
         return savedDeck;

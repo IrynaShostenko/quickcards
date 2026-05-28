@@ -145,7 +145,9 @@ export const dashboardText = {
     loginLater: "Login later",
     createFirstDeck: "Create first deck",
     edit: "Edit",
-    practice: "Practice",
+    delete: "Delete",
+    copyLink: "Copy link",
+    copied: "Copied!",
   },
 
   sections: {

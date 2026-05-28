@@ -73,3 +73,9 @@ export async function saveDeckWithCards({
 
   return mapDeckFromApi(data.deck);
 }
+
+export async function deleteDeck(deckId) {
+  return apiRequest(`/decks/${deckId}`, {
+    method: "DELETE",
+  });
+}

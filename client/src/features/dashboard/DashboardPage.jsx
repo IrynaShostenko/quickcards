@@ -16,9 +16,11 @@ export default function DashboardPage({
   decks,
   isLoading,
   errorMessage,
+  copiedDeckId,
   onCreateNew,
   onEditDeck,
-  onOpenPractice,
+  onDeleteDeck,
+  onCopyPracticeLink,
 }) {
   const deckCountLabel =
     decks.length === 1 ? dashboardText.labels.deck : dashboardText.labels.decks;
@@ -126,7 +128,7 @@ export default function DashboardPage({
                   key={deck.id}
                   className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-sm"
                 >
-                  <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+                  <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
                     <div className="min-w-0">
                       <div className="mb-3 flex flex-wrap gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
@@ -153,21 +155,33 @@ export default function DashboardPage({
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 md:justify-end">
-                      <button
-                        type="button"
-                        onClick={() => onEditDeck(deck.id)}
-                        className="rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
-                      >
-                        {dashboardText.buttons.edit}
-                      </button>
+                    <div className="flex w-full flex-col gap-3 md:w-[240px]">
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => onEditDeck(deck.id)}
+                          className="rounded-3xl bg-indigo-600 px-5 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
+                        >
+                          {dashboardText.buttons.edit}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onDeleteDeck(deck.id)}
+                          className="rounded-3xl bg-red-50 px-5 py-3 font-bold text-red-600 hover:bg-red-100"
+                        >
+                          {dashboardText.buttons.delete}
+                        </button>
+                      </div>
 
                       <button
                         type="button"
-                        onClick={() => onOpenPractice(deck.public_slug)}
-                        className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
+                        onClick={() => onCopyPracticeLink(deck)}
+                        className="w-full rounded-3xl bg-indigo-50 px-5 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
                       >
-                        {dashboardText.buttons.practice}
+                        {copiedDeckId === deck.id
+                          ? dashboardText.buttons.copied
+                          : dashboardText.buttons.copyLink}
                       </button>
                     </div>
                   </div>
