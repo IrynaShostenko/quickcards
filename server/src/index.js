@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const pool = require("./db/pool");
+
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -20,6 +22,26 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     service: "quickcards-api",
   });
+});
+
+app.get("/api/health/db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW() AS current_time");
+
+    res.json({
+      status: "ok",
+      database: "connected",
+      currentTime: result.rows[0].current_time,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      status: "error",
+      database: "not connected",
+      message: error.message,
+    });
+  }
 });
 
 app.listen(PORT, () => {
