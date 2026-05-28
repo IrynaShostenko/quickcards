@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const pool = require("./db/pool");
+const decksRoutes = require("./routes/decksRoutes");
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use("/api/decks", decksRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({

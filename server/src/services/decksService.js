@@ -1,0 +1,70 @@
+const pool = require("../db/pool");
+
+function cleanDeckCards(cards = []) {
+  return cards
+    .map((card) => ({
+      front: String(card.front || "").trim(),
+      back: String(card.back || "").trim(),
+      example: String(card.example || "").trim(),
+      note: String(card.note || "").trim(),
+    }))
+    .filter((card) => card.front && card.back);
+}
+
+async function createDeckWithCards({ title, description = "", cards = [] }) {
+  const cleanCards = cleanDeckCards(cards);
+
+  if (!cleanCards.length) {
+    const error = new Error("At least one valid card is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const deckResult = await client.query(
+      `
+      INSERT INTO decks (teacher_id, title, description, is_public)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, title, description, is_public, created_at, updated_at
+      `,
+      [null, title.trim(), description.trim(), true],
+    );
+
+    const deck = deckResult.rows[0];
+
+    const cardResults = [];
+
+    for (const [index, card] of cleanCards.entries()) {
+      const cardResult = await client.query(
+        `
+        INSERT INTO cards (deck_id, front, back, example, note, order_index)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, front, back, example, note, order_index
+        `,
+        [deck.id, card.front, card.back, card.example, card.note, index],
+      );
+
+      cardResults.push(cardResult.rows[0]);
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      ...deck,
+      cards: cardResults,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = {
+  createDeckWithCards,
+};
