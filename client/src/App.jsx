@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { deleteDeck, getDeckById, getDecksList } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
@@ -11,38 +11,43 @@ import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 import StudentDeck from "./features/practice/StudentDeck";
 
 import { useDeckEditor } from "./hooks/useDeckEditor";
-import {
-  getEditDeckIdFromUrl,
-  getPracticeDeckIdFromUrl,
-  isDashboardRoute,
-} from "./utils/routeUtils";
+
+function getRouteFromHash(hash) {
+  const hashPath = hash.replace("#", "");
+  const pathParts = hashPath.split("/").filter(Boolean);
+
+  const routeName = pathParts[0] || "editor";
+  const routeValue = pathParts[1] || null;
+
+  return {
+    routeName,
+    routeValue,
+    isDashboardView: routeName === "dashboard",
+    practiceDeckId: routeName === "practice" ? routeValue : null,
+    editDeckId: routeName === "edit" ? routeValue : null,
+  };
+}
 
 export default function App() {
   const [currentHash, setCurrentHash] = useState(window.location.hash);
 
-  const practiceDeckId = useMemo(
-    () => getPracticeDeckIdFromUrl(),
-    [currentHash],
-  );
-
-  const editDeckId = useMemo(() => getEditDeckIdFromUrl(), [currentHash]);
-
-  const isDashboardView = useMemo(() => isDashboardRoute(), [currentHash]);
+  const {
+    isDashboardView,
+    practiceDeckId,
+    editDeckId,
+  } = getRouteFromHash(currentHash);
 
   const isStudentOnlyView = Boolean(practiceDeckId);
 
-  const [mode, setMode] = useState(isStudentOnlyView ? "student" : "editor");
+  const [isPracticePreviewMode, setIsPracticePreviewMode] = useState(false);
 
   const [studentDeck, setStudentDeck] = useState(null);
-  const [isLoadingStudentDeck, setIsLoadingStudentDeck] =
-    useState(isStudentOnlyView);
+  const [isLoadingStudentDeck, setIsLoadingStudentDeck] = useState(false);
 
-  const [isLoadingEditDeck, setIsLoadingEditDeck] = useState(
-    Boolean(editDeckId),
-  );
+  const [isLoadingEditDeck, setIsLoadingEditDeck] = useState(false);
 
   const [dashboardDecks, setDashboardDecks] = useState([]);
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(isDashboardView);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardErrorMessage, setDashboardErrorMessage] = useState("");
   const [copiedDeckId, setCopiedDeckId] = useState(null);
 
@@ -52,6 +57,7 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentHash(window.location.hash);
+      setIsPracticePreviewMode(false);
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -62,59 +68,78 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    setMode(isStudentOnlyView ? "student" : "editor");
-  }, [isStudentOnlyView]);
+    if (!practiceDeckId) return;
 
-  useEffect(() => {
-    if (!practiceDeckId) {
-      setStudentDeck(null);
-      setIsLoadingStudentDeck(false);
-      return;
-    }
+    let shouldIgnoreResult = false;
 
     const loadStudentDeck = async () => {
       setIsLoadingStudentDeck(true);
-      setStudentDeck(null);
 
       try {
         const publicDeck = await getPublicDeck(practiceDeckId);
-        setStudentDeck(publicDeck);
+
+        if (!shouldIgnoreResult) {
+          setStudentDeck(publicDeck);
+        }
       } catch (error) {
         console.error(error);
-        setSaveMessage(editorMessages.loadPracticeError(error.message));
+
+        if (!shouldIgnoreResult) {
+          setStudentDeck(null);
+          setSaveMessage(editorMessages.loadPracticeError(error.message));
+        }
       } finally {
-        setIsLoadingStudentDeck(false);
+        if (!shouldIgnoreResult) {
+          setIsLoadingStudentDeck(false);
+        }
       }
     };
 
     loadStudentDeck();
+
+    return () => {
+      shouldIgnoreResult = true;
+    };
   }, [practiceDeckId, setSaveMessage]);
 
   useEffect(() => {
-    if (!editDeckId) {
-      setIsLoadingEditDeck(false);
-      return;
-    }
+    if (!editDeckId) return;
+
+    let shouldIgnoreResult = false;
 
     const loadEditDeck = async () => {
       setIsLoadingEditDeck(true);
 
       try {
         const deck = await getDeckById(editDeckId);
-        loadDeckIntoEditor(deck);
+
+        if (!shouldIgnoreResult) {
+          loadDeckIntoEditor(deck);
+        }
       } catch (error) {
         console.error(error);
-        setSaveMessage(editorMessages.saveError(error.message));
+
+        if (!shouldIgnoreResult) {
+          setSaveMessage(editorMessages.saveError(error.message));
+        }
       } finally {
-        setIsLoadingEditDeck(false);
+        if (!shouldIgnoreResult) {
+          setIsLoadingEditDeck(false);
+        }
       }
     };
 
     loadEditDeck();
+
+    return () => {
+      shouldIgnoreResult = true;
+    };
   }, [editDeckId, loadDeckIntoEditor, setSaveMessage]);
 
   useEffect(() => {
     if (!isDashboardView) return;
+
+    let shouldIgnoreResult = false;
 
     const loadDashboardDecks = async () => {
       setIsLoadingDashboard(true);
@@ -122,16 +147,28 @@ export default function App() {
 
       try {
         const decks = await getDecksList();
-        setDashboardDecks(decks);
+
+        if (!shouldIgnoreResult) {
+          setDashboardDecks(decks);
+        }
       } catch (error) {
         console.error(error);
-        setDashboardErrorMessage(error.message || "Could not load decks.");
+
+        if (!shouldIgnoreResult) {
+          setDashboardErrorMessage(error.message || "Could not load decks.");
+        }
       } finally {
-        setIsLoadingDashboard(false);
+        if (!shouldIgnoreResult) {
+          setIsLoadingDashboard(false);
+        }
       }
     };
 
     loadDashboardDecks();
+
+    return () => {
+      shouldIgnoreResult = true;
+    };
   }, [isDashboardView]);
 
   const practiceCards = isStudentOnlyView
@@ -195,7 +232,7 @@ export default function App() {
     );
   }
 
-  if (isLoadingEditDeck) {
+  if (editDeckId && isLoadingEditDeck) {
     return <PracticeLoadingPage />;
   }
 
@@ -207,13 +244,13 @@ export default function App() {
     return <PracticeNotFoundPage message={editor.saveMessage} />;
   }
 
-  if (mode === "student") {
+  if (isStudentOnlyView || isPracticePreviewMode) {
     return (
       <StudentDeck
         title={practiceTitle}
         description={practiceDescription}
         cards={practiceCards}
-        onBackToEditor={() => setMode("editor")}
+        onBackToEditor={() => setIsPracticePreviewMode(false)}
         showBackButton={!isStudentOnlyView}
       />
     );
@@ -240,9 +277,9 @@ export default function App() {
       onTitleChange={editor.updateTitle}
       onDescriptionChange={editor.updateDescription}
       onStartNewDeck={() => {
-        if (editor.hasUnsavedChanges) {
+        if (editor.hasUnsavedChanges && !editor.savedDeck?.id) {
           const shouldDiscardChanges = window.confirm(
-            "You have unsaved changes. Start a new deck and discard them?",
+            "This new deck has not been saved yet. Start a new deck and discard it?",
           );
 
           if (!shouldDiscardChanges) return;
@@ -253,6 +290,14 @@ export default function App() {
         setCurrentHash("");
       }}
       onOpenDashboard={() => {
+        if (editor.hasUnsavedChanges && !editor.savedDeck?.id) {
+          const shouldDiscardChanges = window.confirm(
+            "This new deck has not been saved yet. Go to dashboard and discard it?",
+          );
+
+          if (!shouldDiscardChanges) return;
+        }
+
         window.location.hash = "/dashboard";
       }}
       onSave={async () => {
@@ -280,7 +325,7 @@ export default function App() {
       }}
       onAddCard={editor.addPreviewCard}
       onShare={editor.shareDeck}
-      onPracticePreview={() => setMode("student")}
+      onPracticePreview={() => setIsPracticePreviewMode(true)}
       onUpdateCard={editor.updatePreviewCard}
       onDeleteCard={editor.deletePreviewCard}
       onCloseSharePanel={editor.closeSharePanel}
