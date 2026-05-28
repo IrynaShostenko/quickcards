@@ -12,6 +12,28 @@ function cleanDeckCards(cards = []) {
     .filter((card) => card.front && card.back);
 }
 
+async function getDecksList() {
+  const result = await pool.query(
+    `
+    SELECT
+      decks.id,
+      decks.title,
+      decks.description,
+      decks.public_slug,
+      decks.is_public,
+      decks.created_at,
+      decks.updated_at,
+      COUNT(cards.id)::INTEGER AS cards_count
+    FROM decks
+    LEFT JOIN cards ON cards.deck_id = decks.id
+    GROUP BY decks.id
+    ORDER BY decks.updated_at DESC
+    `,
+  );
+
+  return result.rows;
+}
+
 async function getDeckById(deckId) {
   const deckResult = await pool.query(
     `
@@ -180,4 +202,5 @@ module.exports = {
   getDeckById,
   createDeckWithCards,
   updateDeckWithCards,
+  getDecksList,
 };

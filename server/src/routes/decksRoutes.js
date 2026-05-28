@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  getDecks,
   getDeck,
   createDeck,
   updateDeck,
@@ -7,6 +8,7 @@ const {
 
 const router = express.Router();
 
+router.get("/", getDecks);
 router.get("/:id", getDeck);
 router.post("/", createDeck);
 router.put("/:id", updateDeck);
