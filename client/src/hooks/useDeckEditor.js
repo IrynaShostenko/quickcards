@@ -150,8 +150,8 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setSaveMessage(editorMessages.createAndPracticeLater);
   };
 
-  const shareUrl = savedDeck
-    ? `${window.location.origin}${window.location.pathname}#/practice/${savedDeck.id}`
+  const shareUrl = savedDeck?.public_slug
+    ? `${window.location.origin}${window.location.pathname}#/practice/${savedDeck.public_slug}`
     : "";
 
   const copyShareLink = async () => {
@@ -181,6 +181,10 @@ export function useDeckEditor({ isStudentOnlyView }) {
   const closeMessage = () => {
     setSaveMessage("");
   };
+
+  const closeSharePanel = () => {
+    setIsSharePanelOpen(false);
+  }
 
   return {
     title,
@@ -214,5 +218,6 @@ export function useDeckEditor({ isStudentOnlyView }) {
     shareDeck,
     closeMessage,
     setSaveMessage,
+    closeSharePanel,
   };
 }

@@ -101,14 +101,16 @@ export default function App() {
       onImportToPreview={editor.importToPreview}
       onCopyShareLink={editor.copyShareLink}
       onOpenStudentView={() => {
-        window.location.hash = `/practice/${editor.savedDeck.id}`;
-        window.dispatchEvent(new HashChangeEvent("hashchange"));
+        if (!editor.shareUrl) return;
+
+        window.open(editor.shareUrl, "_blank", "noopener,noreferrer");
       }}
       onAddCard={editor.addPreviewCard}
       onShare={editor.shareDeck}
       onPracticePreview={() => setMode("student")}
       onUpdateCard={editor.updatePreviewCard}
       onDeleteCard={editor.deletePreviewCard}
+      onCloseSharePanel={editor.closeSharePanel}
     />
   );
 }

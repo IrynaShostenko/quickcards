@@ -36,6 +36,7 @@ export default function DeckEditorPage({
   onPracticePreview,
   onUpdateCard,
   onDeleteCard,
+  onCloseSharePanel,
 }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8">
@@ -72,6 +73,7 @@ export default function DeckEditorPage({
             copied={copied}
             onCopy={onCopyShareLink}
             onOpen={onOpenStudentView}
+            onClose={onCloseSharePanel}
           />
         )}
 
