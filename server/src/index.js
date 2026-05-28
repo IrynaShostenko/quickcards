@@ -5,6 +5,7 @@ require("dotenv").config();
 const pool = require("./db/pool");
 const decksRoutes = require("./routes/decksRoutes");
 const publicDecksRoutes = require("./routes/publicDecksRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(
 
 app.use(express.json());
 
+app.use("/api/auth", authRoutes);
 app.use("/api/decks", decksRoutes);
 app.use("/api/public", publicDecksRoutes);
 

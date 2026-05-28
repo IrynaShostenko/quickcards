@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS decks (
@@ -29,3 +30,7 @@ CREATE TABLE IF NOT EXISTS cards (
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_decks_teacher_id ON decks(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_decks_public_slug ON decks(public_slug);
+CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON cards(deck_id);
