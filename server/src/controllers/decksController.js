@@ -3,6 +3,7 @@ const {
   getDeckById,
   createDeckWithCards,
   updateDeckWithCards,
+  deleteDeckById,
 } = require("../services/decksService");
 
 async function getDecks(req, res) {
@@ -89,9 +90,27 @@ async function updateDeck(req, res) {
   }
 }
 
+async function deleteDeck(req, res) {
+  try {
+    const deletedDeck = await deleteDeckById(req.params.id);
+
+    return res.json({
+      message: "Deck deleted successfully.",
+      deck: deletedDeck,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Could not delete deck.",
+    });
+  }
+}
+
 module.exports = {
   getDecks,
   getDeck,
   createDeck,
   updateDeck,
+  deleteDeck,
 };

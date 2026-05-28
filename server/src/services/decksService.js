@@ -198,9 +198,29 @@ async function updateDeckWithCards({
   }
 }
 
+async function deleteDeckById(deckId) {
+  const result = await pool.query(
+    `
+    DELETE FROM decks
+    WHERE id = $1
+    RETURNING id
+    `,
+    [deckId],
+  );
+
+  if (!result.rows[0]) {
+    const error = new Error("Deck not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
+}
+
 module.exports = {
   getDeckById,
   createDeckWithCards,
   updateDeckWithCards,
+  deleteDeckById,
   getDecksList,
 };
