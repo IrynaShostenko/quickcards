@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+
 import { dashboardText } from "../../constants/uiText";
 
 function formatDate(value) {
@@ -12,6 +14,10 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function buildPracticeUrl(publicSlug) {
+  return `${window.location.origin}${window.location.pathname}#/practice/${publicSlug}`;
+}
+
 export default function DashboardPage({
   decks,
   isLoading,
@@ -22,8 +28,29 @@ export default function DashboardPage({
   onDeleteDeck,
   onCopyPracticeLink,
 }) {
-  const deckCountLabel =
-    decks.length === 1 ? dashboardText.labels.deck : dashboardText.labels.decks;
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+  const filteredDecks = useMemo(() => {
+    if (!normalizedSearchQuery) return decks;
+
+    return decks.filter((deck) => {
+      const practiceUrl = buildPracticeUrl(deck.public_slug);
+
+      const searchableText = [deck.title, deck.description, practiceUrl]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedSearchQuery);
+    });
+  }, [decks, normalizedSearchQuery]);
+
+  const filteredDeckCountLabel =
+    filteredDecks.length === 1
+      ? dashboardText.labels.deck
+      : dashboardText.labels.decks;
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6">
@@ -85,8 +112,27 @@ export default function DashboardPage({
 
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
               <span className="h-2 w-2 rounded-full bg-indigo-500" />
-              {decks.length} {deckCountLabel}
+              {filteredDecks.length} {filteredDeckCountLabel}
             </div>
+          </div>
+
+          <div className="mb-6 flex items-stretch gap-3">
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="min-w-0 flex-1 rounded-2xl border border-transparent bg-slate-50 px-5 py-4 font-semibold text-slate-600 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300"
+              placeholder={dashboardText.search.placeholder}
+            />
+
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="shrink-0 rounded-2xl bg-indigo-50 px-6 py-4 font-bold text-indigo-600 hover:bg-indigo-100"
+              >
+                {dashboardText.search.clear}
+              </button>
+            )}
           </div>
 
           {isLoading && (
@@ -121,9 +167,24 @@ export default function DashboardPage({
             </div>
           )}
 
-          {!isLoading && !errorMessage && decks.length > 0 && (
+          {!isLoading &&
+            !errorMessage &&
+            decks.length > 0 &&
+            filteredDecks.length === 0 && (
+              <div className="rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
+                <h3 className="text-xl font-bold">
+                  {dashboardText.search.noResultsTitle}
+                </h3>
+
+                <p className="mt-2 text-slate-500">
+                  {dashboardText.search.noResultsDescription}
+                </p>
+              </div>
+            )}
+
+          {!isLoading && !errorMessage && filteredDecks.length > 0 && (
             <div className="grid gap-4">
-              {decks.map((deck) => (
+              {filteredDecks.map((deck) => (
                 <article
                   key={deck.id}
                   className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-sm"

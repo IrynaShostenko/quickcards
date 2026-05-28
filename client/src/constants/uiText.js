@@ -156,6 +156,13 @@ export const dashboardText = {
       "Open a set to edit it or share the practice mode with students.",
   },
 
+  search: {
+    placeholder: "Search by title, description, or student link...",
+    clear: "Clear",
+    noResultsTitle: "No matching decks",
+    noResultsDescription: "Try another title, description, or student link.",
+  },
+
   states: {
     loading: "Loading decks...",
     emptyTitle: "No decks yet",
