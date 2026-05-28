@@ -39,7 +39,6 @@ export function useDeckEditor({ isStudentOnlyView }) {
   const markDraftChanged = () => {
     setIsShareReady(false);
     setIsSharePanelOpen(false);
-    setSavedDeck(null);
   };
 
   const updateTitle = (value) => {
@@ -184,7 +183,18 @@ export function useDeckEditor({ isStudentOnlyView }) {
 
   const closeSharePanel = () => {
     setIsSharePanelOpen(false);
-  }
+  };
+
+  const loadDeckIntoEditor = (deck) => {
+    setTitle(deck.title || "");
+    setDescription(deck.description || "");
+    setRawCards("");
+    setPreviewCards(deck.cards || []);
+    setSavedDeck(deck);
+    setIsShareReady(Boolean(deck.public_slug));
+    setIsSharePanelOpen(false);
+    setSaveMessage("");
+  };
 
   return {
     title,
@@ -217,7 +227,8 @@ export function useDeckEditor({ isStudentOnlyView }) {
     copyShareLink,
     shareDeck,
     closeMessage,
-    setSaveMessage,
     closeSharePanel,
+    loadDeckIntoEditor,
+    setSaveMessage,
   };
 }

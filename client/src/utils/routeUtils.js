@@ -1,8 +1,22 @@
-export function getPracticeDeckIdFromUrl() {
+function getHashPathParts() {
   const hashPath = window.location.hash.replace("#", "");
-  const pathParts = hashPath.split("/").filter(Boolean);
+  return hashPath.split("/").filter(Boolean);
+}
+
+export function getPracticeDeckIdFromUrl() {
+  const pathParts = getHashPathParts();
 
   if (pathParts[0] !== "practice" || !pathParts[1]) {
+    return null;
+  }
+
+  return pathParts[1];
+}
+
+export function getEditDeckIdFromUrl() {
+  const pathParts = getHashPathParts();
+
+  if (pathParts[0] !== "edit" || !pathParts[1]) {
     return null;
   }
 

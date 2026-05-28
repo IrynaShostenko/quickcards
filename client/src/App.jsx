@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { getDeckById } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
 import { editorMessages } from "./constants/uiText";
 
@@ -9,19 +10,28 @@ import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 import StudentDeck from "./features/practice/StudentDeck";
 
 import { useDeckEditor } from "./hooks/useDeckEditor";
-import { getPracticeDeckIdFromUrl } from "./utils/routeUtils";
+import {
+  getEditDeckIdFromUrl,
+  getPracticeDeckIdFromUrl,
+} from "./utils/routeUtils";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
+  const initialEditDeckId = useMemo(() => getEditDeckIdFromUrl(), []);
+  const [currentEditDeckId, setCurrentEditDeckId] = useState(initialEditDeckId);
   const isStudentOnlyView = Boolean(practiceDeckId);
 
   const [mode, setMode] = useState(isStudentOnlyView ? "student" : "editor");
   const [studentDeck, setStudentDeck] = useState(null);
   const [isLoadingStudentDeck, setIsLoadingStudentDeck] =
     useState(isStudentOnlyView);
+  const [isLoadingEditDeck, setIsLoadingEditDeck] = useState(
+    Boolean(initialEditDeckId),
+  );
 
   const editor = useDeckEditor({ isStudentOnlyView });
-  const { setSaveMessage } = editor;
+  const { loadDeckIntoEditor, setSaveMessage } = editor;
+  const loadedEditDeckIdRef = useRef(null);
 
   useEffect(() => {
     if (!practiceDeckId) return;
@@ -43,6 +53,30 @@ export default function App() {
     loadStudentDeck();
   }, [practiceDeckId, setSaveMessage]);
 
+  useEffect(() => {
+    if (!initialEditDeckId) return;
+
+    if (loadedEditDeckIdRef.current === initialEditDeckId) return;
+
+    loadedEditDeckIdRef.current = initialEditDeckId;
+
+    const loadEditDeck = async () => {
+      setIsLoadingEditDeck(true);
+
+      try {
+        const deck = await getDeckById(initialEditDeckId);
+        loadDeckIntoEditor(deck);
+      } catch (error) {
+        console.error(error);
+        setSaveMessage(editorMessages.saveError(error.message));
+      } finally {
+        setIsLoadingEditDeck(false);
+      }
+    };
+
+    loadEditDeck();
+  }, [initialEditDeckId, loadDeckIntoEditor, setSaveMessage]);
+
   const practiceCards = isStudentOnlyView
     ? studentDeck?.cards || []
     : editor.previewCards;
@@ -52,6 +86,10 @@ export default function App() {
   const practiceDescription = isStudentOnlyView
     ? studentDeck?.description
     : editor.description;
+
+  if (isLoadingEditDeck) {
+    return <PracticeLoadingPage />;
+  }
 
   if (isStudentOnlyView && isLoadingStudentDeck) {
     return <PracticeLoadingPage />;
@@ -91,7 +129,16 @@ export default function App() {
       onTitleChange={editor.updateTitle}
       onDescriptionChange={editor.updateDescription}
       onStartNewDeck={editor.startNewDeck}
-      onSave={editor.saveDeck}
+      onSave={async () => {
+        const savedDeck = await editor.saveDeck();
+
+        if (savedDeck?.id && !currentEditDeckId) {
+          window.history.replaceState(null, "", `#/edit/${savedDeck.id}`);
+          setCurrentEditDeckId(savedDeck.id);
+        }
+
+        return savedDeck;
+      }}
       onCreate={editor.createDeck}
       onCreateAndPractice={editor.createAndPractice}
       onCloseMessage={editor.closeMessage}

@@ -20,6 +20,12 @@ function mapDeckFromApi(deck) {
   };
 }
 
+export async function getDeckById(deckId) {
+  const data = await apiRequest(`/decks/${deckId}`);
+
+  return mapDeckFromApi(data.deck);
+}
+
 export async function saveDeckWithCards({
   existingDeckId,
   title,
