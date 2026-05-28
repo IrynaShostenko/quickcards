@@ -26,6 +26,7 @@ export default function DeckEditorPage({
   onSave,
   onCreate,
   onCreateAndPractice,
+  onOpenDashboard,
   onCloseMessage,
   onRawCardsChange,
   onClearRawCards,
@@ -57,6 +58,7 @@ export default function DeckEditorPage({
           onSave={onSave}
           onCreate={onCreate}
           onCreateAndPractice={onCreateAndPractice}
+          onOpenDashboard={onOpenDashboard}
         />
 
         {saveMessage && (

@@ -20,6 +20,25 @@ function mapDeckFromApi(deck) {
   };
 }
 
+function mapDeckSummaryFromApi(deck) {
+  return {
+    id: deck.id,
+    title: deck.title,
+    description: deck.description || "",
+    public_slug: deck.public_slug,
+    is_public: deck.is_public,
+    created_at: deck.created_at,
+    updated_at: deck.updated_at,
+    cards_count: deck.cards_count || 0,
+  };
+}
+
+export async function getDecksList() {
+  const data = await apiRequest("/decks");
+
+  return (data.decks || []).map(mapDeckSummaryFromApi);
+}
+
 export async function getDeckById(deckId) {
   const data = await apiRequest(`/decks/${deckId}`);
 

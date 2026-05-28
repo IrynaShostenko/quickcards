@@ -13,6 +13,7 @@ export default function DeckEditorHeader({
   onSave,
   onCreate,
   onCreateAndPractice,
+  onOpenDashboard,
 }) {
   return (
     <>
@@ -76,6 +77,14 @@ export default function DeckEditorHeader({
             className="rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
           >
             {deckEditorHeaderText.buttons.createAndPractice}
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenDashboard}
+            className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
+          >
+            {deckEditorHeaderText.buttons.dashboard}
           </button>
         </div>
       </header>

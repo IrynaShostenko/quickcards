@@ -1,0 +1,182 @@
+import { dashboardText } from "../../constants/uiText";
+
+function formatDate(value) {
+  if (!value) return dashboardText.states.noDate;
+
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+export default function DashboardPage({
+  decks,
+  isLoading,
+  errorMessage,
+  onCreateNew,
+  onEditDeck,
+  onOpenPractice,
+}) {
+  const deckCountLabel =
+    decks.length === 1 ? dashboardText.labels.deck : dashboardText.labels.decks;
+
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-6">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-8 rounded-[2rem] bg-white px-6 py-5 shadow-sm md:px-8">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
+            <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                {dashboardText.badge}
+              </div>
+
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                {dashboardText.title}
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-slate-500">
+                {dashboardText.description}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
+              >
+                {dashboardText.buttons.dashboard}
+              </button>
+
+              <button
+                type="button"
+                onClick={onCreateNew}
+                className="rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
+              >
+                {dashboardText.buttons.newDeck}
+              </button>
+
+              <button
+                type="button"
+                className="rounded-3xl bg-slate-100 px-6 py-3 font-bold text-slate-500"
+              >
+                {dashboardText.buttons.loginLater}
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div>
+              <h2 className="text-2xl font-bold">
+                {dashboardText.sections.cardSetsTitle}
+              </h2>
+
+              <p className="mt-1 text-slate-500">
+                {dashboardText.sections.cardSetsDescription}
+              </p>
+            </div>
+
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-indigo-500" />
+              {decks.length} {deckCountLabel}
+            </div>
+          </div>
+
+          {isLoading && (
+            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-slate-500">
+              {dashboardText.states.loading}
+            </div>
+          )}
+
+          {!isLoading && errorMessage && (
+            <div className="rounded-2xl bg-red-50 px-5 py-4 font-semibold text-red-600">
+              {errorMessage}
+            </div>
+          )}
+
+          {!isLoading && !errorMessage && decks.length === 0 && (
+            <div className="rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
+              <h3 className="text-xl font-bold">
+                {dashboardText.states.emptyTitle}
+              </h3>
+
+              <p className="mt-2 text-slate-500">
+                {dashboardText.states.emptyDescription}
+              </p>
+
+              <button
+                type="button"
+                onClick={onCreateNew}
+                className="mt-5 rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
+              >
+                {dashboardText.buttons.createFirstDeck}
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !errorMessage && decks.length > 0 && (
+            <div className="grid gap-4">
+              {decks.map((deck) => (
+                <article
+                  key={deck.id}
+                  className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-sm"
+                >
+                  <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          {dashboardText.labels.public}
+                        </span>
+
+                        <span className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+                          {deck.cards_count} {dashboardText.labels.cards}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold">{deck.title}</h3>
+
+                      {deck.description && (
+                        <p className="mt-2 text-slate-500">
+                          {deck.description}
+                        </p>
+                      )}
+
+                      <p className="mt-4 text-sm font-semibold text-slate-400">
+                        {dashboardText.states.updatedPrefix}{" "}
+                        {formatDate(deck.updated_at)}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 md:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => onEditDeck(deck.id)}
+                        className="rounded-3xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-indigo-500"
+                      >
+                        {dashboardText.buttons.edit}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onOpenPractice(deck.public_slug)}
+                        className="rounded-3xl bg-indigo-50 px-6 py-3 font-bold text-indigo-600 hover:bg-indigo-100"
+                      >
+                        {dashboardText.buttons.practice}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { getDeckById } from "./api/decksApi";
+import { getDeckById, getDecksList } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
 import { editorMessages } from "./constants/uiText";
 
@@ -8,16 +8,19 @@ import DeckEditorPage from "./features/decks/DeckEditorPage";
 import PracticeLoadingPage from "./features/practice/PracticeLoadingPage";
 import PracticeNotFoundPage from "./features/practice/PracticeNotFoundPage";
 import StudentDeck from "./features/practice/StudentDeck";
+import DashboardPage from "./features/dashboard/DashboardPage";
 
 import { useDeckEditor } from "./hooks/useDeckEditor";
 import {
   getEditDeckIdFromUrl,
   getPracticeDeckIdFromUrl,
+  isDashboardRoute,
 } from "./utils/routeUtils";
 
 export default function App() {
   const practiceDeckId = useMemo(() => getPracticeDeckIdFromUrl(), []);
   const initialEditDeckId = useMemo(() => getEditDeckIdFromUrl(), []);
+  const isDashboardView = useMemo(() => isDashboardRoute(), []);
   const [currentEditDeckId, setCurrentEditDeckId] = useState(initialEditDeckId);
   const isStudentOnlyView = Boolean(practiceDeckId);
 
@@ -28,6 +31,9 @@ export default function App() {
   const [isLoadingEditDeck, setIsLoadingEditDeck] = useState(
     Boolean(initialEditDeckId),
   );
+  const [dashboardDecks, setDashboardDecks] = useState([]);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(isDashboardView);
+  const [dashboardErrorMessage, setDashboardErrorMessage] = useState("");
 
   const editor = useDeckEditor({ isStudentOnlyView });
   const { loadDeckIntoEditor, setSaveMessage } = editor;
@@ -77,6 +83,27 @@ export default function App() {
     loadEditDeck();
   }, [initialEditDeckId, loadDeckIntoEditor, setSaveMessage]);
 
+  useEffect(() => {
+    if (!isDashboardView) return;
+
+    const loadDashboardDecks = async () => {
+      setIsLoadingDashboard(true);
+      setDashboardErrorMessage("");
+
+      try {
+        const decks = await getDecksList();
+        setDashboardDecks(decks);
+      } catch (error) {
+        console.error(error);
+        setDashboardErrorMessage(error.message || "Could not load decks.");
+      } finally {
+        setIsLoadingDashboard(false);
+      }
+    };
+
+    loadDashboardDecks();
+  }, [isDashboardView]);
+
   const practiceCards = isStudentOnlyView
     ? studentDeck?.cards || []
     : editor.previewCards;
@@ -86,6 +113,29 @@ export default function App() {
   const practiceDescription = isStudentOnlyView
     ? studentDeck?.description
     : editor.description;
+
+  if (isDashboardView) {
+    return (
+      <DashboardPage
+        decks={dashboardDecks}
+        isLoading={isLoadingDashboard}
+        errorMessage={dashboardErrorMessage}
+        onCreateNew={() => {
+          window.location.href = `${window.location.pathname}`;
+        }}
+        onEditDeck={(deckId) => {
+          window.location.href = `${window.location.pathname}#/edit/${deckId}`;
+        }}
+        onOpenPractice={(publicSlug) => {
+          window.open(
+            `${window.location.origin}${window.location.pathname}#/practice/${publicSlug}`,
+            "_blank",
+            "noopener,noreferrer",
+          );
+        }}
+      />
+    );
+  }
 
   if (isLoadingEditDeck) {
     return <PracticeLoadingPage />;
@@ -143,6 +193,9 @@ export default function App() {
         editor.startNewDeck();
         setCurrentEditDeckId(null);
         window.history.replaceState(null, "", window.location.pathname);
+      }}
+      onOpenDashboard={() => {
+        window.location.href = `${window.location.pathname}#/dashboard`;
       }}
       onSave={async () => {
         const savedDeck = await editor.saveDeck();

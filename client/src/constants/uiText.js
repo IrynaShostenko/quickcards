@@ -93,6 +93,7 @@ export const deckEditorHeaderText = {
   title: "Create a card module",
   visibilityLabel: "Public",
   buttons: {
+    dashboard: "Dashboard",
     new: "New",
     save: "Save",
     saving: "Saving...",
@@ -130,4 +131,41 @@ export const editorMessages = {
     `Could not load this practice set: ${message}`,
   importSuccess: (cardsCount) =>
     `${cardsCount} cards imported to preview. The import field was cleared.`,
+};
+
+export const dashboardText = {
+  badge: "Teacher workspace",
+  title: "QuickCards",
+  description:
+    "Manage your card sets, open student practice links, and continue editing saved modules.",
+
+  buttons: {
+    dashboard: "Dashboard",
+    newDeck: "New deck",
+    loginLater: "Login later",
+    createFirstDeck: "Create first deck",
+    edit: "Edit",
+    practice: "Practice",
+  },
+
+  sections: {
+    cardSetsTitle: "Your card sets",
+    cardSetsDescription:
+      "Open a set to edit it or share the practice mode with students.",
+  },
+
+  states: {
+    loading: "Loading decks...",
+    emptyTitle: "No decks yet",
+    emptyDescription: "Create your first card set and it will appear here.",
+    noDate: "No date",
+    updatedPrefix: "Updated",
+  },
+
+  labels: {
+    public: "Public",
+    deck: "deck",
+    decks: "decks",
+    cards: "cards",
+  },
 };

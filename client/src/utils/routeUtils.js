@@ -22,3 +22,9 @@ export function getEditDeckIdFromUrl() {
 
   return pathParts[1];
 }
+
+export function isDashboardRoute() {
+  const pathParts = getHashPathParts();
+
+  return pathParts[0] === "dashboard";
+}
