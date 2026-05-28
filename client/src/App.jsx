@@ -130,6 +130,14 @@ export default function App() {
       onTitleChange={editor.updateTitle}
       onDescriptionChange={editor.updateDescription}
       onStartNewDeck={() => {
+        if (editor.hasUnsavedChanges) {
+          const shouldDiscardChanges = window.confirm(
+            "You have unsaved changes. Start a new deck and discard them?",
+          );
+
+          if (!shouldDiscardChanges) return;
+        }
+
         editor.startNewDeck();
         setCurrentEditDeckId(null);
         window.history.replaceState(null, "", window.location.pathname);
