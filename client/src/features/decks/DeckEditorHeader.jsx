@@ -4,6 +4,7 @@ export default function DeckEditorHeader({
   title,
   description,
   isSaving,
+  hasUnsavedChanges,
   onTitleChange,
   onDescriptionChange,
   onStartNewDeck,
@@ -19,9 +20,20 @@ export default function DeckEditorHeader({
             {deckEditorHeaderText.title}
           </h1>
 
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {deckEditorHeaderText.visibilityLabel}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {deckEditorHeaderText.visibilityLabel}
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  hasUnsavedChanges ? "bg-amber-400" : "bg-emerald-500"
+                }`}
+              />
+              {hasUnsavedChanges ? "Unsaved changes" : "Saved"}
+            </div>
           </div>
         </div>
 

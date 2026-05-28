@@ -26,10 +26,10 @@ export function useDeckEditor({ isStudentOnlyView }) {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState(defaultSettings);
-
   const [previewCards, setPreviewCards] = useState(() =>
     isStudentOnlyView ? [] : parseCards(sampleInput, defaultSettings),
   );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const parsedCards = useMemo(
     () => parseCards(rawCards, settings),
@@ -37,6 +37,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
   );
 
   const markDraftChanged = () => {
+    setHasUnsavedChanges(true);
     setIsShareReady(false);
     setIsSharePanelOpen(false);
   };
@@ -116,6 +117,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
 
       setSavedDeck(savedDeckFromApi);
       setPreviewCards(cleanCards);
+      setHasUnsavedChanges(false);
       setIsShareReady(true);
       setIsSharePanelOpen(false);
       setSaveMessage(editorMessages.saveSuccess(cleanCards.length));
@@ -136,6 +138,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setRawCards("");
     setPreviewCards([]);
     setSavedDeck(null);
+    setHasUnsavedChanges(true);
     setIsShareReady(false);
     setIsSharePanelOpen(false);
     setSaveMessage(editorMessages.newCardModuleStarted);
@@ -191,6 +194,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
     setRawCards("");
     setPreviewCards(deck.cards || []);
     setSavedDeck(deck);
+    setHasUnsavedChanges(false);
     setIsShareReady(Boolean(deck.public_slug));
     setIsSharePanelOpen(false);
     setSaveMessage("");
@@ -210,6 +214,7 @@ export function useDeckEditor({ isStudentOnlyView }) {
     isSharePanelOpen,
     isSaving,
     shareUrl,
+    hasUnsavedChanges,
 
     updateTitle,
     updateDescription,
