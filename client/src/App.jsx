@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 
+import { getCurrentTeacher } from "./api/authApi";
+import {
+  clearAuthSession,
+  getAuthToken,
+  getSavedUser,
+} from "./api/authStorage";
+
+import AuthPage from "./features/auth/AuthPage";
+
 import { deleteDeck, getDeckById, getDecksList } from "./api/decksApi";
 import { getPublicDeck } from "./api/publicApi";
 import { editorMessages } from "./constants/uiText";
@@ -50,9 +59,46 @@ export default function App() {
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardErrorMessage, setDashboardErrorMessage] = useState("");
   const [copiedDeckId, setCopiedDeckId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => getSavedUser());
+  const [isCheckingAuth, setIsCheckingAuth] = useState(Boolean(getAuthToken()));
 
   const editor = useDeckEditor({ isStudentOnlyView });
   const { loadDeckIntoEditor, setSaveMessage } = editor;
+
+  useEffect(() => {
+    const token = getAuthToken();
+
+    if (!token) return;
+
+    let shouldIgnoreResult = false;
+
+    const checkCurrentTeacher = async () => {
+      try {
+        const authData = await getCurrentTeacher();
+
+        if (!shouldIgnoreResult) {
+          setCurrentUser(authData.user);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (!shouldIgnoreResult) {
+          clearAuthSession();
+          setCurrentUser(null);
+        }
+      } finally {
+        if (!shouldIgnoreResult) {
+          setIsCheckingAuth(false);
+        }
+      }
+    };
+
+    checkCurrentTeacher();
+
+    return () => {
+      shouldIgnoreResult = true;
+    };
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -180,6 +226,24 @@ export default function App() {
   const practiceDescription = isStudentOnlyView
     ? studentDeck?.description
     : editor.description;
+  
+  if (!isStudentOnlyView && isCheckingAuth) {
+    return <PracticeLoadingPage />;
+  }
+
+  if (!isStudentOnlyView && !currentUser) {
+    return (
+      <AuthPage
+        onAuthSuccess={(user) => {
+          setCurrentUser(user);
+          window.location.hash = "/dashboard";
+        }}
+        onSkipAuth={() => {
+          window.location.hash = "/dashboard";
+        }}
+      />
+    );
+  }
 
   if (isDashboardView) {
     return (
