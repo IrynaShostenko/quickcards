@@ -1,11 +1,12 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const pool = require("./db/pool");
+const authRoutes = require("./routes/authRoutes");
 const decksRoutes = require("./routes/decksRoutes");
 const publicDecksRoutes = require("./routes/publicDecksRoutes");
-const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -50,6 +51,16 @@ app.get("/api/health/db", async (req, res) => {
     });
   }
 });
+
+if (process.env.NODE_ENV === "production") {
+  const clientDistPath = path.join(__dirname, "../../client/dist");
+
+  app.use(express.static(clientDistPath));
+
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`QuickCards API is running on port ${PORT}`);
