@@ -20,6 +20,7 @@ function buildPracticeUrl(publicSlug) {
 
 export default function DashboardPage({
   decks,
+  currentUser,
   isLoading,
   errorMessage,
   copiedDeckId,
@@ -27,6 +28,7 @@ export default function DashboardPage({
   onEditDeck,
   onDeleteDeck,
   onCopyPracticeLink,
+  onLogout,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -52,6 +54,9 @@ export default function DashboardPage({
       ? dashboardText.labels.deck
       : dashboardText.labels.decks;
 
+  const teacherName =
+    currentUser?.name || currentUser?.email || dashboardText.user.fallbackName;
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6">
       <div className="mx-auto max-w-6xl">
@@ -61,6 +66,8 @@ export default function DashboardPage({
               <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 {dashboardText.badge}
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-600">{teacherName}</span>
               </div>
 
               <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
@@ -70,6 +77,7 @@ export default function DashboardPage({
               <p className="mt-2 max-w-2xl text-slate-500">
                 {dashboardText.description}
               </p>
+
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -90,9 +98,10 @@ export default function DashboardPage({
 
               <button
                 type="button"
-                className="rounded-3xl bg-slate-100 px-6 py-3 font-bold text-slate-500"
+                onClick={onLogout}
+                className="rounded-3xl bg-slate-100 px-6 py-3 font-bold text-slate-500 hover:bg-slate-200"
               >
-                {dashboardText.buttons.loginLater}
+                {dashboardText.user.logout}
               </button>
             </div>
           </div>
@@ -116,11 +125,11 @@ export default function DashboardPage({
             </div>
           </div>
 
-          <div className="mb-6 flex items-stretch gap-3">
+          <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto]">
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="min-w-0 flex-1 rounded-2xl border border-transparent bg-slate-50 px-5 py-4 font-semibold text-slate-600 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300"
+              className="min-w-0 rounded-2xl border border-transparent bg-slate-50 px-5 py-4 font-semibold text-slate-600 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300"
               placeholder={dashboardText.search.placeholder}
             />
 
@@ -128,7 +137,7 @@ export default function DashboardPage({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="shrink-0 rounded-2xl bg-indigo-50 px-6 py-4 font-bold text-indigo-600 hover:bg-indigo-100"
+                className="rounded-2xl bg-indigo-50 px-6 py-4 font-bold text-indigo-600 hover:bg-indigo-100"
               >
                 {dashboardText.search.clear}
               </button>

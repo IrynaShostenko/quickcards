@@ -139,6 +139,12 @@ export const dashboardText = {
   description:
     "Manage your card sets, open student practice links, and continue editing saved modules.",
 
+  user: {
+    greeting: "Signed in as",
+    fallbackName: "Teacher",
+    logout: "Logout",
+  },
+
   buttons: {
     dashboard: "Dashboard",
     newDeck: "New deck",

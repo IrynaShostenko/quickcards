@@ -238,9 +238,6 @@ export default function App() {
           setCurrentUser(user);
           window.location.hash = "/dashboard";
         }}
-        onSkipAuth={() => {
-          window.location.hash = "/dashboard";
-        }}
       />
     );
   }
@@ -249,12 +246,13 @@ export default function App() {
     return (
       <DashboardPage
         decks={dashboardDecks}
+        currentUser={currentUser}
         isLoading={isLoadingDashboard}
         errorMessage={dashboardErrorMessage}
         copiedDeckId={copiedDeckId}
         onCreateNew={() => {
+          editor.startNewDeck();
           window.location.hash = "";
-          setCurrentHash("");
         }}
         onEditDeck={(deckId) => {
           window.location.hash = `/edit/${deckId}`;
@@ -291,6 +289,14 @@ export default function App() {
             console.error(error);
             setDashboardErrorMessage(error.message || "Could not delete deck.");
           }
+        }}
+        onLogout={() => {
+          clearAuthSession();
+          setCurrentUser(null);
+          setDashboardDecks([]);
+          setDashboardErrorMessage("");
+          setCopiedDeckId(null);
+          window.location.hash = "";
         }}
       />
     );
