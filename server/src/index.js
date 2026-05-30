@@ -4,6 +4,7 @@ const path = require("path");
 require("dotenv").config();
 
 const pool = require("./db/pool");
+const initDb = require("./db/initDb");
 const authRoutes = require("./routes/authRoutes");
 const decksRoutes = require("./routes/decksRoutes");
 const publicDecksRoutes = require("./routes/publicDecksRoutes");
@@ -11,11 +12,24 @@ const publicDecksRoutes = require("./routes/publicDecksRoutes");
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const isProduction = process.env.NODE_ENV === "production";
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5000",
+  process.env.CLIENT_URL,
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: CLIENT_URL,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
   }),
 );
 
@@ -29,6 +43,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     service: "quickcards-api",
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
@@ -52,8 +67,8 @@ app.get("/api/health/db", async (req, res) => {
   }
 });
 
-if (process.env.NODE_ENV === "production") {
-  const clientDistPath = path.join(__dirname, "../../client/dist");
+if (isProduction) {
+  const clientDistPath = path.join(__dirname, "../public");
 
   app.use(express.static(clientDistPath));
 
@@ -62,6 +77,19 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`QuickCards API is running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    if (process.env.RUN_DB_INIT === "true") {
+      await initDb();
+    }
+
+    app.listen(PORT, () => {
+      console.log(`QuickCards API is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
